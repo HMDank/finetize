@@ -1,16 +1,9 @@
-import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
-from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
 from statsmodels.tsa.arima.model import ARIMA
-from statsmodels.tsa.stattools import adfuller
-from arch import arch_model
-from datetime import timedelta, datetime
 from scipy.stats import rv_histogram
 from tqdm import tqdm
 from plots import fetch_data
-from io import BytesIO
-import base64
 import random
 
 
