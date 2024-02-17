@@ -8,6 +8,7 @@ from statsmodels.tsa.arima.model import ARIMA
 from datetime import timedelta, datetime
 import seaborn as sns
 import matplotlib
+import plotly.express as px
 matplotlib.use('Agg')
 plt.rcParams['font.family'] = "Poppins"
 
@@ -34,7 +35,8 @@ def get_stock_data(symbol: str, days_away: int):
         end_date_str = end_date.strftime('%Y-%m-%d')
 
         df = stock_historical_data(symbol, start_date_str, end_date_str,
-                                   "1D", type='stock', source='TCBS')
+                                   "1D", type='stock', source='TCBS') if len(symbol) == 3 else stock_historical_data(symbol, start_date_str, end_date_str,
+                                   "1D", type='index', source='TCBS')
 
         # Check if df is None or empty
         if df is None or df.empty:
@@ -134,21 +136,17 @@ def generate_acf_pacf_plots(df):
     return fig
 
 
-def generate_scatter_plot(df):
+def generate_scatter_plot(df, days_away):
     # Extract prices and returns
     prices = df['close']
     returns = prices.pct_change().dropna()
+    market_prices = get_stock_data('VNINDEX', days_away)['close']
+    market_returns = market_prices.pct_change().dropna()
 
-    # Extract market returns
-    market_returns = df['market_returns'].pct_change().dropna()
-
-    # Create scatter plot
-    fig, ax = plt.subplots(figsize=(8, 5))
-    ax.scatter(market_returns, returns, alpha=0.5)
-    ax.set_title('Scatter Plot of Returns vs Market Returns')
-    ax.set_xlabel('Market Returns')
-    ax.set_ylabel('Returns')
-    ax.grid(True)
+# Plot the scatter plot with marginal histograms
+    fig = px.scatter(x=returns, y=market_returns,
+                     marginal_x="histogram", marginal_y="histogram", trendline="ols",
+                     labels={'y': 'Market Returns', 'x': 'Portfolio Returns'})
 
     return fig
 

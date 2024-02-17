@@ -33,17 +33,17 @@ def analyze(events_list, amt, prices):
         cur_price = event[2]
         if event[0] == 'b':
             total_shares_held += event[3]  # Increment shares held when buying
-            trading_volume += cur_price  # Increment trading volume when buying
+            trading_volume += cur_price
+            amt += cur_price  # Increment trading volume when buying
         elif event[0] == 's':
             total_shares_held -= event[4]  # Decrement shares held when selling
             trading_volume += cur_price  # Increment trading volume when selling
-
         # Calculate book size as the total value of assets held (price * number of shares)
-        final_book_size = total_shares_held * cur_price
+        final_book_size = total_shares_held * cur_price + amt
         # Assuming the last price reflects the current price
-        pnl = final_book_size - book_size
+        pnl = (final_book_size - book_size)/book_size
         pnl_values.append(pnl)
-
+        book_size = final_book_size
     average_pnl = np.mean(pnl_values)
     std_dev_pnl = np.std(pnl_values)
     if std_dev_pnl != 0:  # Avoid division by zero
@@ -57,13 +57,13 @@ def analyze(events_list, amt, prices):
     else:
         daily_turnover = 0
 
-    return {'Turnover': round(daily_turnover, 2), 'Sharpe': round(pnl_ratio, 2)}
+    return {'Turnover': round(daily_turnover, 2), 'Sharpe': round(pnl_ratio, 2), 'Margin': round(average_pnl/trading_volume, 2)}
 
 
 def decide(rate, choice):
     if choice == 'Random':
         return random.choice(['buy', 'sell','wait'])
-    if choice == 'If Last Positive, Buy':
+    if choice == 'Momentum':
         if rate > 0:
             return 'buy'
         if rate < 0:
@@ -71,10 +71,9 @@ def decide(rate, choice):
         return 'wait'
 
 
-def simulate_random_buying(choice, returns, prices, amt, order, thresh, verbose=False, plot=True):
+def simulate_trading(choice, returns, prices, amt, order, thresh, verbose=False, plot=True):
     if isinstance(order, float):
         thresh = None
-
     events_list = []
     buy_price = None
     init_amt = amt
@@ -92,10 +91,10 @@ def simulate_random_buying(choice, returns, prices, amt, order, thresh, verbose=
         if action == 'sell' and total_shares_held > 0:
             buy_price = sum(buying_price) / len(buying_price) if len(buying_price) > 0 else buy_price
             buying_price.clear()
-            sell_amount = 1#$random.randint(1, total_shares_held) if total_shares_held > 1 else 1
+            sell_amount = total_shares_held#$random.randint(1, total_shares_held) if total_shares_held > 1 else 1
             sell_price = prices.loc[date]
+            amt += sell_price*sell_amount
             ret = (sell_price - buy_price) / buy_price
-            amt *= (1 + ret)
             events_list.append(('s', date, sell_price, ret, sell_amount))
             total_shares_held -= sell_amount
 
@@ -105,8 +104,9 @@ def simulate_random_buying(choice, returns, prices, amt, order, thresh, verbose=
                 print('=======================================')
 
         elif action == 'buy':
-            buy_amount = 1
             buy_price = prices.loc[date]
+            buy_amount = int(amt/buy_price)
+            amt -= buy_price*buy_amount
             buying_price.append(buy_price)
             events_list.append(('b', date, buy_price, buy_amount))
             total_shares_held += buy_amount
@@ -143,7 +143,7 @@ def simulate_random_buying(choice, returns, prices, amt, order, thresh, verbose=
 
         tot_return = round(100*(amt / init_amt - 1), 2)
         tot_return = str(tot_return) + '%'
-        ax.set_title("Price Data\nThresh=%s\nTotal Amt: $%s\nTotal Return: %s\nShares Left: %s"%(thresh, round(amt,2), tot_return, total_shares_held), fontsize=20)
+        ax.set_title("Price Data\nThresh=%s\nTotal Amt: %s\nTotal Return: %s\nShares Left: %s"%(thresh, round(amt/1000000,2), tot_return, total_shares_held), fontsize=20)
         ax.set_ylim(prices.min() * 0.95, prices.max() * 1.05)
 
         return fig, stats

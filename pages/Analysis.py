@@ -1,5 +1,5 @@
 import streamlit as st
-from plots import generate_data_plot, generate_acf_pacf_plots, generate_histogram_plot, get_stock_data, generate_metrics
+from plots import generate_data_plot, generate_acf_pacf_plots, generate_histogram_plot, get_stock_data, generate_metrics, generate_scatter_plot
 import pandas as pd
 st.set_page_config(layout="wide",
                    page_title='Stock Analysis')
@@ -21,14 +21,15 @@ def main():
             st.session_state['symbol'] = symbol
             st.session_state['days_away'] = days_away
             graph(symbol, days_away)
-            with col0:
-                st.subheader(f'Statistics of {symbol}')
-                metric_list = ['pe', 'eps', 'roe']
-                metrics = generate_metrics(symbol, metric_list)
-                subcolumns = st.columns(len(metric_list))
-                for idx, column in enumerate(subcolumns):
-                    with column:
-                        st.metric(label=metric_list[idx].upper(),value=metrics[metric_list[idx]])
+            if len(symbol) == 3:
+                with col0:
+                    st.subheader(f'Statistics of {symbol}')
+                    metric_list = ['pe', 'eps', 'roe', 'pb']
+                    metrics = generate_metrics(symbol, metric_list)
+                    subcolumns = st.columns(len(metric_list))
+                    for idx, column in enumerate(subcolumns):
+                        with column:
+                            st.metric(label=metric_list[idx].upper(),value=metrics[metric_list[idx]])
 
         else:
             st.error('Invalid symbol')
@@ -41,9 +42,10 @@ def graph(symbol, days_away):
         plot_data = generate_data_plot(df)
         plot_histogram = generate_histogram_plot(df)
         plot_acf_pacf = generate_acf_pacf_plots(df)
-        summary_data = {'Statistic': ['Mean', 'Median'],
-                        'Return': [returns.mean(), returns.median()]}
+        summary_data = {'Statistic': ['Mean', 'Median', 'Min', 'Max'],
+                        'Return': [returns.mean(), returns.median(), returns.min(), returns.max()]}
         summary_df = pd.DataFrame(summary_data)
+        plot_scatter = generate_scatter_plot(df, days_away)
 
         col1, col2 = st.columns(2)
 
@@ -56,8 +58,10 @@ def graph(symbol, days_away):
             st.dataframe(summary_df, hide_index=True, use_container_width=True)
 
         with col2:
-            st.subheader('Histogram Plot')
+            st.subheader('Histogram')
             st.pyplot(plot_histogram)
+            st.subheader('Marginal Histogram vs Market')
+            st.plotly_chart(plot_scatter, use_container_width=True)
 
     except Exception as e:
         st.error(f"Error: {e}")
