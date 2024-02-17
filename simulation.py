@@ -3,12 +3,12 @@ import numpy as np
 from statsmodels.tsa.arima.model import ARIMA
 from scipy.stats import rv_histogram
 from tqdm import tqdm
-from plots import fetch_data
+from plots import get_stock_data
 import random
 
 
 def calculate_next_wealth(f, current_wealth):
-    df = fetch_data(symbol, days_away=days_away)
+    df = get_stock_data(symbol, days_away=days_away)
     prices = df['close']
     returns = prices.pct_change().dropna()
     counts, bins, _ = plt.hist(returns, bins=100, color='blue', alpha=0.7)
@@ -149,46 +149,3 @@ def simulate_random_buying(choice, returns, prices, amt, order, thresh, verbose=
         return fig, stats
 
     return None
-
-    # go through dates
-    # for date, r in tqdm(returns.iloc[14:].items(), total=len(returns.iloc[14:])):
-    #     # if you're currently holding the stock, sell it
-    #     action = random.choice(['buy', 'sell'])
-    #     if action == 'sell' and curr_holding:
-    #         sell_price = prices.loc[date]
-    #         curr_holding = False
-    #         ret = (sell_price - buy_price) / buy_price
-    #         amt *= (1+ret)
-    #         events_list.append(('s', date, sell_price, ret))
-
-    #         if verbose:
-    #             print('Sold at $%s'%sell_price)
-    #             print('Actual Return: %s'%(round(ret, 4)))
-    #             print('=======================================')
-    #         continue
-
-    #     # get data til just before current date
-    #     curr_data = returns[:date]
-
-    #     if isinstance(order, tuple):
-    #         try:
-    #             # fit model
-    #             model = ARIMA(curr_data, order=order).fit(maxiter=200)
-
-    #             # get forecast
-    #             pred = model.forecast()[0][0]
-
-    #         except Exception:
-    #             pred = thresh - 1
-
-    #     # if you predict a high enough return and not holding, buy stock
-    #     elif action == 'buy':
-    #         if (not curr_holding) and \
-    #            ((isinstance(order, float) and np.random.random() < order)
-    #            or (isinstance(order, tuple) and pred > thresh)):
-
-    #             curr_holding = True
-    #             buy_price = prices.loc[date]
-    #             events_list.append(('b', date, buy_price))
-    #             if verbose:
-    #                 print('Bought at $%s' % buy_price)

@@ -29,12 +29,6 @@ st.markdown(
     **Ready to take your stock market journey to the next level?**
 
     Start exploring Finetize today and discover the power of data-driven investing.
-
-    **Click "Get Started" below to create your free account!**
-
-    # Add a button with "Get Started" linking to sign-up page
-
-    **P.S.** We also offer premium features with advanced tools and deeper analysis to further enhance your trading experience. See what suits your needs best!
 """
 )
 

@@ -1,5 +1,5 @@
 import streamlit as st
-from plots import fetch_data
+from plots import get_stock_data
 from simulation import simulate_random_buying
 
 st.set_page_config(layout="wide",
@@ -22,7 +22,7 @@ def main():
 
 def simulate(choice, symbol, days_away):
     try:
-        df = fetch_data(symbol, days_away=days_away)
+        df = get_stock_data(symbol, days_away=days_away)
         plot, stats = simulate_random_buying(choice, df['close'].pct_change().dropna(), df['close'], 100, 0.5, None, verbose=False)
         st.subheader('Simulation')
         st.pyplot(plot)

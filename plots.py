@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 
 import numpy as np
-from vnstock import stock_historical_data
+from vnstock import stock_historical_data, stock_screening_insights
 import pandas as pd
 from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
 from statsmodels.tsa.arima.model import ARIMA
@@ -24,7 +24,7 @@ custom_dark_colors = {
 plt.rcParams.update(custom_dark_colors)
 
 
-def fetch_data(symbol: str, days_away: int):
+def get_stock_data(symbol: str, days_away: int):
     try:
         end_date = datetime.today()
         start_date = end_date - timedelta(days=days_away)
@@ -151,3 +151,12 @@ def generate_scatter_plot(df):
     ax.grid(True)
 
     return fig
+
+
+def generate_metrics(symbol, metric_list):
+    params = {
+            "exchangeName": "HOSE,HNX",
+            }
+    df = stock_screening_insights(params, size=1700)
+    df = df[df['ticker'] == symbol][metric_list]
+    return df.iloc[0].to_dict()
