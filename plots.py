@@ -59,7 +59,7 @@ def generate_data_plot(df):
     fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(8, 5), sharex=True)
 
     # Plot prices on the first subplot
-    color = 'tab:red'
+    color = 'white'
     ax1.set_ylabel('Prices', color=color)
     ax1.plot(prices.index, prices, label='Prices', color=color)
     ax1.tick_params(axis='y', labelcolor=color)
@@ -111,9 +111,9 @@ def generate_histogram_plot(df):
     fig, ax = plt.subplots(figsize=(2.75, 4))
 
     # Plot histogram with a smooth line
-    sns.histplot(returns, bins=20, color='blue',
+    sns.histplot(returns, bins=20, color='#1F77B4',
                  alpha=0.7, ax=ax)
-    sns.kdeplot(returns, color="red", alpha=0.6)
+    sns.kdeplot(returns, color="white", alpha=0.7)
 
     ax.set_xlabel('Returns', color='white')
     ax.set_ylabel('Frequency', color='white')
@@ -145,8 +145,10 @@ def generate_scatter_plot(df, days_away):
 
 # Plot the scatter plot with marginal histograms
     fig = px.scatter(x=returns, y=market_returns,
-                     marginal_x="histogram", marginal_y="histogram", trendline="ols",
-                     labels={'y': 'Market Returns', 'x': 'Portfolio Returns'})
+                     marginal_x="histogram", marginal_y="histogram",
+                     trendline="ols", trendline_color_override='white',
+                     labels={'y': 'Market Returns', 'x': 'Portfolio Returns'},
+                     color_discrete_sequence=['#1F77B4'])
 
     return fig
 

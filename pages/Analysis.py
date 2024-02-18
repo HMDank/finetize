@@ -24,7 +24,7 @@ def main():
             if len(symbol) == 3:
                 with col0:
                     st.subheader(f'Statistics of {symbol}')
-                    metric_list = ['pe', 'eps', 'roe', 'pb']
+                    metric_list = ['pe', 'eps', 'roe']
                     metrics = generate_metrics(symbol, metric_list)
                     subcolumns = st.columns(len(metric_list))
                     for idx, column in enumerate(subcolumns):
