@@ -32,4 +32,3 @@ tqdm==4.66.1
 trove_classifiers==2023.11.29
 urllib3_secure_extra==0.1.0
 vnstock==0.2.8.7
-xmlrpclib==1.0.1
