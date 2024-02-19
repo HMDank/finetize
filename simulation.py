@@ -5,6 +5,9 @@ from scipy.stats import rv_histogram
 from tqdm import tqdm
 from plots import get_stock_data
 import random
+from statsmodels.tools.sm_exceptions import ConvergenceWarning
+import warnings
+warnings.filterwarnings('ignore', category=ConvergenceWarning)
 
 
 def calculate_next_wealth(f, current_wealth):
@@ -89,7 +92,8 @@ def decide(rate, choice, period, order):
         return 'wait'
 
 
-def simulate_trading(choice, period, returns, prices, amt, order, verbose=False, plot=True):
+def simulate_trading(choice, period, prices, amt, order, verbose=False, plot=True):
+    returns = prices.pct_change().dropna()
     events_list = []
     buy_price = None
     init_amt = amt

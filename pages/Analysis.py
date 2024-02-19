@@ -3,6 +3,7 @@ from plots import generate_data_plot, generate_acf_pacf_plots, generate_histogra
 import pandas as pd
 st.set_page_config(layout="wide",
                    page_title='Stock Analysis')
+import traceback
 
 
 def main():
@@ -38,7 +39,7 @@ def main():
 def graph(symbol, days_away):
     try:
         df = get_stock_data(symbol, days_away=days_away)
-        returns = df['close'].pct_change().dropna()
+        returns = df['close'].pct_change()
         plot_data = generate_data_plot(df)
         plot_histogram = generate_histogram_plot(df)
         plot_acf_pacf = generate_acf_pacf_plots(df)
@@ -64,7 +65,8 @@ def graph(symbol, days_away):
             st.plotly_chart(plot_scatter, use_container_width=True)
 
     except Exception as e:
-        st.error(f"Error: {e}")
+        tb_str = traceback.format_exception(type(e), e, e.__traceback__)
+        st.error(f"{tb_str}")
 
 
 if __name__ == '__main__':

@@ -36,7 +36,8 @@ def get_stock_data(symbol: str, days_away: int):
 
         df = stock_historical_data(symbol, start_date_str, end_date_str,
                                    "1D", type='stock', source='TCBS') if len(symbol) == 3 else stock_historical_data(symbol, start_date_str, end_date_str,
-                                   "1D", type='index', source='TCBS')
+                                   "1D", type='index', source='TCBS').drop_duplicates()
+
 
         # Check if df is None or empty
         if df is None or df.empty:
@@ -44,10 +45,10 @@ def get_stock_data(symbol: str, days_away: int):
             return ''
         df.set_index('time', inplace=True)
         df.index = pd.to_datetime(df.index)
-        return df
+        return df.drop_duplicates()
 
     except Exception as e:
-        print(f"Error: {e}")
+        print(f"Get Stock Data Error: {e}")
         return None
 
 
@@ -140,7 +141,8 @@ def generate_scatter_plot(df, days_away):
     # Extract prices and returns
     prices = df['close']
     returns = prices.pct_change().dropna()
-    market_prices = get_stock_data('VNINDEX', days_away)['close']
+    market_prices = get_stock_data('VNINDEX', days_away).drop_duplicates()
+    market_prices = market_prices['close']
     market_returns = market_prices.pct_change().dropna()
 
 # Plot the scatter plot with marginal histograms
