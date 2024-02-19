@@ -24,8 +24,8 @@ else:
         st.write('Simulating buy and selling', st.session_state['symbol'], 'within the last', st.session_state['days_away'], 'days')
         col1s, col2s = st.columns(2)
         with col1s:
-            choice = st.selectbox('Pick a Strategy',options=["Pick a Strategy", "Random", "Momentum", 'ARIMA'], label_visibility='collapsed', placeholder='Pick a Strategy')
-            period = st.slider('Pick a lookback period', min_value=1, max_value=30) if choice == 'Momentum' else None
+            choice = st.selectbox('Pick a Strategy',options=["Pick a Strategy", "Random", "Momentum", 'Mean Reversion', 'ARIMA'], label_visibility='collapsed', placeholder='Pick a Strategy')
+            period = st.slider('Pick a lookback period', min_value=1, max_value=30) if (choice == 'Momentum' or choice == 'Mean Reversion') else None
             params = st.text_input('Pick ARIMA parameters (p,d,q)', placeholder="p,d,q").split(',') if choice == 'ARIMA' else '0,0,0'
             order = (tuple(map(int, filter(None, params)))
                     if params != '0,0,0'
@@ -38,8 +38,15 @@ else:
             st.error('Please pick a Strategy before running the simulation')
         else:
             plot, stats = simulate(choice, st.session_state['symbol'], st.session_state['days_away'], period, order)
+            with col2:
+                st.write("")
+                st.write("")
+                st.write("")
+                st.write("")
+                st.write("")
+                st.write("")
+                st.write("")
+                st.write("")
+                st.dataframe(stats, use_container_width=True)
             st.subheader(f'Simulation of {choice} strategy')
             st.pyplot(plot)
-            st.dataframe(stats)
-
-

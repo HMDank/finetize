@@ -72,6 +72,12 @@ def decide(rate, choice, period, order):
         if sum(rate[-period:]) / period > 0:
             return 'buy'
         return 'sell'
+    if choice == 'Mean Reversion':
+        if len(rate) < period + 1:
+            return 'wait'
+        if sum(rate[-(period+1):-1]) / period > rate[-1]:
+            return 'buy'
+        return 'sell'
     if choice == 'ARIMA':
         if len(rate) > 30:
             model = ARIMA(rate, order=order).fit()
