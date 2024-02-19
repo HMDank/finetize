@@ -9,7 +9,7 @@ st.set_page_config(layout="wide",
 def simulate(choice, symbol, days_away, period, order):
     try:
         df = get_stock_data(symbol, days_away=days_away)
-        plot, stats = simulate_trading(choice, period, df['close'].pct_change().dropna(), df['close'], 100_000_000, order, verbose=True)
+        plot, stats = simulate_trading(choice, period, df['close'].pct_change().dropna(), df['close'], 100_000_000, order, verbose=False)
         return plot, stats
     except Exception as e:
         st.error(f"Error: {e}")

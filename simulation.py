@@ -76,9 +76,9 @@ def decide(rate, choice, period, order):
         if len(rate) > 30:
             model = ARIMA(rate, order=order).fit()
             prediction = model.forecast(steps=1)
-            if prediction > 0.02:
+            if prediction > 0.001:
                 return 'buy'
-            if prediction < 0.02:
+            if prediction < -0.001:
                 return 'sell'
         return 'wait'
 
