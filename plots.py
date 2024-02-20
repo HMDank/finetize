@@ -8,10 +8,12 @@ from statsmodels.tsa.arima.model import ARIMA
 from datetime import timedelta, datetime
 import seaborn as sns
 import matplotlib
+from matplotlib import font_manager as fm
 import plotly.express as px
-matplotlib.use('Agg')
-plt.rcParams['font.family'] = "Poppins"
 
+matplotlib.use('Agg')
+prop = fm.FontProperties(fname='POPPINS-REGULAR.OTF')
+plt.rcParams['font.family'] = prop.get_name()
 custom_dark_colors = {
     'figure.facecolor': '#262730',
     'axes.facecolor': '#262730',     # Axes background color
