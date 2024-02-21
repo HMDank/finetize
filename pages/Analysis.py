@@ -1,5 +1,5 @@
 import streamlit as st
-from plots import generate_data_plot, generate_acf_pacf_plots, generate_histogram_plot, get_stock_data, generate_metrics, generate_scatter_plot
+from plots import generate_data_plot, generate_acf_plots, generate_histogram_plot, get_stock_data, generate_metrics, generate_scatter_plot
 import pandas as pd
 import traceback
 st.set_page_config(layout="wide",
@@ -8,7 +8,7 @@ st.set_page_config(layout="wide",
 
 @st.cache_data(show_spinner="Retrieving stocks's data")
 def retrieve_data(symbol, days_away):
-    df = get_stock_data(symbol, days_away=days_away)
+    df = get_stock_data(symbol, days_away=days_away).dropna()
     returns = df['close'].pct_change()
     return df, returns
 
@@ -23,17 +23,19 @@ def graph_price_plot(df, data_selection='Price'):
 def graph_col1_plots(symbol, days_away):
     df, returns = retrieve_data(symbol, days_away)
     plot_histogram = generate_histogram_plot(df)
-    plot_acf_pacf = generate_acf_pacf_plots(df)
+    plot_acf = generate_acf_plots(returns, plot_pacf=False)
+    plot_pacf = generate_acf_plots(returns, plot_pacf=True)
+    # plot_acf_pacf = generate_acf_pacf_plots(df)
     summary_data = {'Statistic': ['Mean', 'Median', 'Min', 'Max'],
                     'Return': [returns.mean(), returns.median(), returns.min(), returns.max()]}
     summary_df = pd.DataFrame(summary_data)
     plot_scatter = generate_scatter_plot(df, days_away)
-    return plot_histogram, plot_acf_pacf, summary_df, plot_scatter
+    return plot_histogram, plot_acf, plot_pacf, summary_df, plot_scatter
 
 
 @st.cache_data(show_spinner='Loading Financial Metrics')
 def calculate_financial_metrics(symbol):
-    st.subheader(f'Statistics of {symbol}')
+    st.subheader(f'Statistics of {symbol.upper()}')
     metric_list = ['pe', 'eps', 'roe', 'pb']
     metrics = generate_metrics(symbol, metric_list)
     subcolumns = st.columns(len(metric_list))
@@ -63,19 +65,26 @@ def main():
         col1, col2 = st.columns(2)
         try:
             with col1:
-                st.subheader('Price Plots')
                 data_selection = st.radio('Pick a data type:', ['Price', 'Returns', 'Candle'], horizontal=True)
-                plot_data = graph_price_plot(df, data_selection)
-                plot_histogram, plot_acf_pacf, summary_df, plot_scatter = graph_col1_plots(symbol, days_away)
-                st.plotly_chart(plot_data, use_container_width=True)
-                st.subheader('ACF and PACF Plots')
-                st.plotly_chart(plot_acf_pacf, use_container_width=True)
+                st.subheader('Price Plots')
+            plot_data = graph_price_plot(df, data_selection)
+            st.plotly_chart(plot_data, use_container_width=True)
+            col1a, col2a = st.columns(2)
+            with col1a:
+                plot_histogram, plot_acf, plot_pacf, summary_df, plot_scatter = graph_col1_plots(symbol, days_away)
+                acf, pacf = st.columns(2)
+                with acf:
+                    st.subheader('ACF')
+                    st.plotly_chart(plot_acf, use_container_width=True)
+                with pacf:
+                    st.subheader('PACF')
+                    st.plotly_chart(plot_pacf, use_container_width=True)
                 st.subheader("Summary Statistics:")
                 st.dataframe(summary_df, hide_index=True, use_container_width=True)
 
-            with col2:
+            with col2a:
                 st.subheader('Histogram')
-                st.pyplot(plot_histogram)
+                st.plotly_chart(plot_histogram, use_container_width=True)
                 st.subheader('Marginal Histogram vs Market')
                 st.plotly_chart(plot_scatter, use_container_width=True)
 

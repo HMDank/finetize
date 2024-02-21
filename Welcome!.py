@@ -31,5 +31,7 @@ st.markdown(
     Start exploring Finetize today and discover the power of data-driven investing.
 """
 )
-
-st.sidebar.success('Pick')
+with st.sidebar:
+    st.write('Contact me with:')
+    st.page_link("https://www.linkedin.com/in/hmdank/", label="Linkedin!")
+    st.page_link("https://github.com/HMDank", label="Github!")

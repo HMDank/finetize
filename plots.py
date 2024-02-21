@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 import streamlit as st
 import numpy as np
 import os
+import scipy.stats as stats
 from vnstock import stock_historical_data, stock_screening_insights, fr_trade_heatmap
 import pandas as pd
 from statsmodels.graphics.tsaplots import acf, pacf
@@ -10,6 +11,7 @@ from datetime import timedelta, datetime
 import seaborn as sns
 import matplotlib
 from matplotlib import font_manager as fm
+import plotly.figure_factory as ff
 import plotly.express as px
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
@@ -57,14 +59,14 @@ def get_stock_data(symbol: str, days_away: int):
             return ''
         df.set_index('time', inplace=True)
         df.index = pd.to_datetime(df.index)
-        return df.drop_duplicates()
+        return df.drop_duplicates().dropna()
 
     except Exception as e:
         print(f"Get Stock Data Error: {e}")
         return None
 
 
-def generate(df, data_selection):
+def generate_ai_response(df, data_selection):
     st.line_chart(df, y =[user_question_variable])
     summary_statistics = pandas_agent.run(f"Give me a summary of the statistics of {user_question_variable}")
     st.write(summary_statistics)
@@ -79,18 +81,30 @@ def generate(df, data_selection):
 
 
 def generate_data_plot(df, data_selection):
-    prices = df['close'].dropna()
+    prices = df['close'].dropna().drop_duplicates()
     returns = prices.pct_change().dropna()
     if data_selection == 'Candle':
         fig = go.Figure(data=[go.Candlestick(x=df.index.values,
                 open=df['open'],
                 high=df['high'],
                 low=df['low'],
-                close=df['close'])])
+                close=df['close'])],)
         fig.update_layout(
             plot_bgcolor='#262730',
-            # paper_bgcolor='#262730'
+            xaxis_rangeslider_visible=False,
+            height=500,
+            margin=dict(t=20, b=20, l=20, r=20),
+            paper_bgcolor='#262730'
             )
+        fig.update_xaxes(showline=True,
+                         linewidth=1,
+                         linecolor='white',
+                         mirror=True)
+
+        fig.update_yaxes(showline=True,
+                         linewidth=1,
+                         linecolor='white',
+                         mirror=True)
         return fig
     data = prices if data_selection == 'Price' else returns
     fig = go.Figure()
@@ -100,140 +114,83 @@ def generate_data_plot(df, data_selection):
         showlegend=False
     ))
     fig.update_layout(
+        xaxis_rangeslider_visible=False,
         plot_bgcolor='#262730',
-        # paper_bgcolor='#262730'
+        paper_bgcolor='#262730',
+        height=500,
+        margin=dict(t=20, b=20, l=20, r=20),
         )
+    fig.update_xaxes(showline=True,
+                     linewidth=1,
+                     linecolor='white',
+                     mirror=True)
+
+    fig.update_yaxes(showline=True,
+                     linewidth=1,
+                     linecolor='white',
+                     mirror=True)
 
     return fig
-
-    # Create a figure with two subplots
-    # fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(8, 5), sharex=True)
-
-    # # Plot prices on the first subplot
-    # color = 'white'
-    # ax1.set_ylabel('Prices', color=color)
-    # ax1.plot(prices.index, prices, label='Prices', color=color)
-    # ax1.tick_params(axis='y', labelcolor=color)
-
-    # # Plot returns on the second subplot
-    # color = 'tab:blue'
-    # ax2.set_xlabel('Date')
-    # ax2.set_ylabel('Returns', color=color)
-    # ax2.plot(returns.index, returns, label='Price Returns', color=color)
-    # ax2.tick_params(axis='y', labelcolor=color)
-    # # Add horizontal grey lines for better navigation
-    # ax2.set_xlabel('Date', color='white')
-
-    # x_ticks = ax1.get_xticks()
-
-    # # Add vertical lines for each x-axis tick
-    # for tick in x_ticks:
-    #     ax1.axvline(tick, color='grey', linestyle='--', linewidth=0.8, alpha=0.3)
-
-    # x_ticks2 = ax2.get_xticks()
-
-    # # Add vertical lines for each x-axis tick
-    # for tick in x_ticks2:
-    #     ax2.axvline(tick, color='grey', linestyle='--', linewidth=0.8, alpha=0.3)
-
-    # y_ticks = ax1.get_yticks()
-
-    # # Add vertical lines for each x-axis tick
-    # for tick in y_ticks:
-    #     ax1.axhline(tick, color='grey', linestyle='--', linewidth=0.8, alpha=0.3)
-
-    # y_ticks2 = ax2.get_yticks()
-
-    # # Add vertical lines for each x-axis tick
-    # for tick in y_ticks2:
-    #     ax2.axhline(tick, color='grey', linestyle='--', linewidth=0.8, alpha=0.3)
-
-    # return fig
 
 
 def generate_histogram_plot(df):
     prices = df['close']
     returns = prices.pct_change().dropna()
 
-    # Convert infinity values to NaN
-    returns.replace([np.inf, -np.inf], np.nan, inplace=True)
+    kde = stats.gaussian_kde(returns)
+    x_vals = np.linspace(returns.min(), returns.max(), 1000)
+    kde_vals = kde.evaluate(x_vals)
 
-    # Create a figure with a single subplot
-    fig, ax = plt.subplots(figsize=(2.75, 4))
+    histogram = go.Histogram(x=returns, histnorm='probability density', name='Returns', showlegend=False)
+    kde_line = go.Scatter(x=x_vals, y=kde_vals, mode='lines', name='KDE', line=dict(color = 'white'), showlegend=False)
+    fig = go.Figure(data=[histogram, kde_line])
 
-    # Plot histogram with a smooth line
-    sns.histplot(returns, bins=20, color='#1F77B4',
-                 alpha=0.7, ax=ax)
-    sns.kdeplot(returns, color="white", alpha=0.7)
-
-    ax.set_xlabel('Returns', color='white')
-    ax.set_ylabel('Frequency', color='white')
-    ax.set_title('Histogram of Returns')
-
-    return fig
-
-
-def generate_acf_pacf_plots(df):
-    prices = df['close']
-    returns = prices.pct_change().dropna()
-
-    def create_corr_plot(series, plot_pacf=False, ratio=(4, 5)):
-        corr_array = pacf(series.dropna(), alpha=0.05) if plot_pacf else acf(series.dropna(), alpha=0.05)
-        lower_y = corr_array[1][:,0] - corr_array[0]
-        upper_y = corr_array[1][:,1] - corr_array[0]
-
-        fig = go.Figure()
-        [fig.add_scatter(x=(x,x), y=(0,corr_array[0][x]), mode='lines', line_color='#3f3f3f')
-         for x in range(len(corr_array[0]))]
-        fig.add_scatter(x=np.arange(len(corr_array[0])), y=corr_array[0], mode= 'markers', marker_color='#1f77b4',
-                        marker_size=12)
-        fig.add_scatter(x=np.arange(len(corr_array[0])), y=upper_y, mode='lines', line_color='rgba(255,255,255,0)')
-        fig.add_scatter(x=np.arange(len(corr_array[0])), y=lower_y, mode='lines', fillcolor='rgba(32, 146, 230,0.3)',
-                        fill='tonexty', line_color='rgba(255,255,255,0)')
-        fig.update_traces(showlegend=False)
-        fig.update_xaxes(range=[-1, 20])
-        fig.update_yaxes(range=[-0.5, 0.5])
-        fig.update_yaxes(zerolinecolor='#000000')
-
-        title = 'Partial Autocorrelation (PACF)' if plot_pacf else 'Autocorrelation (ACF)'
-        fig.update_layout(height=ratio[0]*100, width=ratio[1]*100, margin=dict(l=30, r=30, t=30, b=30))
-        return fig
-
-    acf_fig = create_corr_plot(returns)
-    pacf_fig = create_corr_plot(returns, plot_pacf=True)
-
-    # Create a subplot with two rows and one column
-    fig = make_subplots(rows=1, cols=2, shared_yaxes=True)
-
-    # Add ACF plot to the first row
-    for trace in acf_fig.data:
-        fig.add_trace(trace, row=1, col=1)
-    fig.update_xaxes(title_text="Lags")
-
-    # Add PACF plot to the second row
-    for trace in pacf_fig.data:
-        fig.add_trace(trace, row=1, col=2)
-    fig.update_xaxes(title_text="Lags")
-
-    # Update layout
-    fig.update_layout(acf_fig.layout)
     fig.update_layout(
+        xaxis_title='Returns',
+        yaxis_title='Probability Density',
         plot_bgcolor='#262730',
-        #  paper_bgcolor='#262730'
-        )
+        paper_bgcolor='#262730',
+        margin=dict(t=10, b=10, l=10, r=10),
+        height=600,
+    )
+    fig.update_xaxes(showline=True,
+                     linewidth=1,
+                     linecolor='white',
+                     mirror=True)
+
+    fig.update_yaxes(showline=True,
+                     linewidth=1,
+                     linecolor='white',
+                     mirror=True)
 
     return fig
 
 
-    # fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(8, 5))
+def generate_acf_plots(series, plot_pacf=False):
+    corr_array = pacf(series.dropna(), alpha=0.05) if plot_pacf else acf(series.dropna(), alpha=0.05)
+    lower_y = corr_array[1][:,0] - corr_array[0]
+    upper_y = corr_array[1][:,1] - corr_array[0]
 
-    # plot_acf(returns, lags=min(int(len(df)*0.2), 20), ax=ax1)
-    # ax1.set_title('Autocorrelation Function (ACF)')
-
-    # plot_pacf(returns, lags=min(int(len(df)*0.2), 20), ax=ax2)
-    # ax2.set_title('Partial Autocorrelation Function (PACF)')
-
-    # return fig
+    fig = go.Figure()
+    [fig.add_scatter(x=(x,x), y=(0,corr_array[0][x]), mode='lines', line_color='#3f3f3f')
+        for x in range(len(corr_array[0]))]
+    fig.add_scatter(x=np.arange(len(corr_array[0])), y=corr_array[0], mode= 'markers', marker_color='#1f77b4',
+                    marker_size=12)
+    fig.add_scatter(x=np.arange(len(corr_array[0])), y=upper_y, mode='lines', line_color='rgba(255,255,255,0)')
+    fig.add_scatter(x=np.arange(len(corr_array[0])), y=lower_y, mode='lines', fillcolor='rgba(32, 146, 230,0.2)',
+                    fill='tonexty', line_color='rgba(255,255,255,0)')
+    fig.update_traces(showlegend=False)
+    fig.update_xaxes(range=[-1, 20], showline=True,
+                     linewidth=1,
+                     linecolor='white',
+                     mirror=True)
+    fig.update_yaxes(range=[-0.5, 0.5], showline=True,
+                     linewidth=1,
+                     linecolor='white',
+                     mirror=True)
+    fig.update_yaxes(zerolinecolor='#FFFFFF')
+    fig.update_layout(height=350, width=700, margin=dict(l=10, r=10, t=10, b=10), plot_bgcolor='#262730', paper_bgcolor='#262730')
+    return fig
 
 
 def generate_scatter_plot(df, days_away):
@@ -252,8 +209,17 @@ def generate_scatter_plot(df, days_away):
                      color_discrete_sequence=['#1F77B4'])
     fig.update_layout(
         plot_bgcolor='#262730',
-        #  paper_bgcolor='#262730'
+        paper_bgcolor='#262730'
         )
+    fig.update_xaxes(showline=True,
+                     linewidth=1,
+                     linecolor='white',
+                     mirror=True)
+
+    fig.update_yaxes(showline=True,
+                     linewidth=1,
+                     linecolor='white',
+                     mirror=True)
 
     return fig
 
