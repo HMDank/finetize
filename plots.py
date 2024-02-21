@@ -15,10 +15,9 @@ import plotly.figure_factory as ff
 import plotly.express as px
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
-# from apikey import apikey
-# from langchain.llms import OpenAI
-# from langchain_experimental.agents import create_pandas_dataframe_agent
-# from dotenv import load_dotenv, find_dotenv
+from langchain.llms import OpenAI
+from langchain_experimental.agents import create_pandas_dataframe_agent
+from dotenv import load_dotenv, find_dotenv
 
 
 matplotlib.use('Agg')
@@ -66,29 +65,15 @@ def get_stock_data(symbol: str, days_away: int):
         return None
 
 
-def generate_ai_response(df, data_selection):
-    st.line_chart(df, y =[user_question_variable])
-    summary_statistics = pandas_agent.run(f"Give me a summary of the statistics of {user_question_variable}")
-    st.write(summary_statistics)
-    normality = pandas_agent.run(f"Check for normality or specific distribution shapes of {user_question_variable}")
-    st.write(normality)
-    outliers = pandas_agent.run(f"Assess the presence of outliers of {user_question_variable}")
-    st.write(outliers)
-    trends = pandas_agent.run(f"Analyse trends, seasonality, and cyclic patterns of {user_question_variable}")
-    st.write(trends)
-    missing_values = pandas_agent.run(f"Determine the extent of missing values of {user_question_variable}")
-    st.write(missing_values)
-
-
 def generate_data_plot(df, data_selection):
     prices = df['close'].dropna().drop_duplicates()
     returns = prices.pct_change().dropna()
     if data_selection == 'Candle':
         fig = go.Figure(data=[go.Candlestick(x=df.index.values,
-                open=df['open'],
-                high=df['high'],
-                low=df['low'],
-                close=df['close'])],)
+                              open=df['open'],
+                              high=df['high'],
+                              low=df['low'],
+                              close=df['close'])],)
         fig.update_layout(
             plot_bgcolor='#262730',
             xaxis_rangeslider_visible=False,
@@ -111,7 +96,8 @@ def generate_data_plot(df, data_selection):
     fig.add_trace(go.Scatter(
         x=data.index.values,
         y=data.values,
-        showlegend=False
+        showlegend=False,
+        mode='lines+markers',
     ))
     fig.update_layout(
         xaxis_rangeslider_visible=False,
@@ -141,7 +127,7 @@ def generate_histogram_plot(df):
     x_vals = np.linspace(returns.min(), returns.max(), 1000)
     kde_vals = kde.evaluate(x_vals)
 
-    histogram = go.Histogram(x=returns, histnorm='probability density', name='Returns', showlegend=False)
+    histogram = go.Histogram(x=returns, histnorm='probability density', name='Returns', showlegend=False, marker=dict(color='#1F77B4', line=dict(color='white', width=1)))
     kde_line = go.Scatter(x=x_vals, y=kde_vals, mode='lines', name='KDE', line=dict(color = 'white'), showlegend=False)
     fig = go.Figure(data=[histogram, kde_line])
 
@@ -174,7 +160,7 @@ def generate_acf_plots(series, plot_pacf=False):
     fig = go.Figure()
     [fig.add_scatter(x=(x,x), y=(0,corr_array[0][x]), mode='lines', line_color='#3f3f3f')
         for x in range(len(corr_array[0]))]
-    fig.add_scatter(x=np.arange(len(corr_array[0])), y=corr_array[0], mode= 'markers', marker_color='#1f77b4',
+    fig.add_scatter(x=np.arange(len(corr_array[0])), y=corr_array[0], mode= 'markers', marker_color='#1F77B4',
                     marker_size=12)
     fig.add_scatter(x=np.arange(len(corr_array[0])), y=upper_y, mode='lines', line_color='rgba(255,255,255,0)')
     fig.add_scatter(x=np.arange(len(corr_array[0])), y=lower_y, mode='lines', fillcolor='rgba(32, 146, 230,0.2)',
@@ -236,8 +222,9 @@ def generate_metrics(symbol, metric_list):
         st.error("Can't generate financial metrics")
 
 
-# def generate_ai_analysis(df):
-#     os.environ['OPENAI_API_KEY'] = apikey
-#     load_dotenv(find_dotenv())
-#     llm = OpenAI(temperature=0)
-#     pandas_agent = create_pandas_dataframe_agent(llm, df, verbose=True)
+def generate_ai_analysis(df):
+    apikey = "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"
+    llm = OpenAI(api_key=apikey)
+    pandas_agent = create_pandas_dataframe_agent(llm, df, verbose=True)
+    trends = pandas_agent.run(f"Analyze trends, seasonality, and cyclic patterns of 'close'")
+    return trends

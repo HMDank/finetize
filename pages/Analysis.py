@@ -1,5 +1,5 @@
 import streamlit as st
-from plots import generate_data_plot, generate_acf_plots, generate_histogram_plot, get_stock_data, generate_metrics, generate_scatter_plot
+from plots import generate_data_plot, generate_acf_plots, generate_histogram_plot, get_stock_data, generate_metrics, generate_scatter_plot, generate_ai_analysis
 import pandas as pd
 import traceback
 st.set_page_config(layout="wide",
@@ -8,8 +8,12 @@ st.set_page_config(layout="wide",
 
 @st.cache_data(show_spinner="Retrieving stocks's data")
 def retrieve_data(symbol, days_away):
-    df = get_stock_data(symbol, days_away=days_away).dropna()
-    returns = df['close'].pct_change()
+    try:
+        df = get_stock_data(symbol, days_away=days_away).dropna()
+        returns = df['close'].pct_change()
+    except Exception:
+        st.error('Invalid Stock Symbol')
+        return
     return df, returns
 
 
@@ -43,6 +47,11 @@ def calculate_financial_metrics(symbol):
         with column:
             st.metric(label=metric_list[idx].upper(),value=metrics[metric_list[idx]])
 
+@st.cache_data(show_spinner="Loading AI's Response")
+def show_ai_response(df):
+    response = generate_ai_analysis(df)
+    return response
+
 
 def main():
     st.title('Stock Analysis')
@@ -65,7 +74,7 @@ def main():
         col1, col2 = st.columns(2)
         try:
             with col1:
-                data_selection = st.radio('Pick a data type:', ['Price', 'Returns', 'Candle'], horizontal=True)
+                data_selection = st.radio('Pick a plot:', ['Price', 'Returns', 'Candle'], horizontal=True)
                 st.subheader('Price Plots')
             plot_data = graph_price_plot(df, data_selection)
             st.plotly_chart(plot_data, use_container_width=True)
@@ -81,6 +90,7 @@ def main():
                     st.plotly_chart(plot_pacf, use_container_width=True)
                 st.subheader("Summary Statistics:")
                 st.dataframe(summary_df, hide_index=True, use_container_width=True)
+                calculate_financial_metrics(symbol)
 
             with col2a:
                 st.subheader('Histogram')
@@ -94,7 +104,8 @@ def main():
 
         if len(symbol) == 3:
             with col0:
-                calculate_financial_metrics(symbol)
+                st.subheader('AI Analysis')
+                st.write(f'{show_ai_response(df)}')
 
 
 if __name__ == '__main__':

@@ -39,15 +39,7 @@ else:
                 st.error('Please pick a Strategy before running the simulation')
         else:
             plot, stats = simulate(choice, st.session_state['symbol'], st.session_state['days_away'], period, order)
-            with col2:
-                st.write("")
-                st.write("")
-                st.write("")
-                st.write("")
-                st.write("")
-                st.write("")
-                st.write("")
-                st.write("")
+            with col2 :
                 st.dataframe(stats, use_container_width=True)
             st.subheader(f'Simulation of {choice} strategy')
             st.pyplot(plot)
