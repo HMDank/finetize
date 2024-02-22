@@ -45,11 +45,12 @@ def calculate_financial_metrics(symbol):
 
 @st.cache_data(show_spinner="Loading AI's Response (Might take up to 5 Minutes)")
 def show_ai_response(df):
-    response = generate_ai_analysis(df)
+    response = generate_ai_analysis(df, key=st.secrets['apikey'])
     return response
 
 
 def main():
+    print(st.secrets['something'])
     st.title('Stock Analysis')
     col, col0 = st.columns(2)
     with col:

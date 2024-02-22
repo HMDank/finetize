@@ -195,12 +195,8 @@ def generate_metrics(symbol):
         st.error("Can't generate financial metrics")
 
 
-def generate_ai_analysis(df):
-    # GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
-    load_dotenv()
-    OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-    # llm1 = GoogleGenerativeAI(model="gemini-pro", google_api_key=GOOGLE_API_KEY)
-    llm2 = OpenAI(temperature=0, openai_api_key=OPENAI_API_KEY)
+def generate_ai_analysis(df, key):
+    llm2 = OpenAI(temperature=0, openai_api_key=key)
     pandas_agent = create_pandas_dataframe_agent(llm2, df, verbose=True)
     trends = pandas_agent.run(f"This is a data of the price of a stock symbol. Tell me the direction of the 'close' column over time and a pattern if it exists")
     return trends
