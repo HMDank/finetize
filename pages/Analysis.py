@@ -50,7 +50,6 @@ def show_ai_response(df):
 
 
 def main():
-    print(st.secrets['something'])
     st.title('Stock Analysis')
     col, col0 = st.columns(2)
     with col:
