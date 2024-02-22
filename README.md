@@ -1,20 +1,24 @@
 # finetize
 
-Finetize is a Streamlit web application for stock analysis. It provides various plots and statistics to analyze stock data.
+## Welcome to Finetize v1.1!
 
-## Features
+**Changes made to v1.0:**
 
-- **Interactive Interface**: Users can input a stock symbol and the number of days for analysis, and the app generates plots and statistics accordingly.
-- **Price Plots**: Visualize stock price over time.
-- **ACF and PACF Plots**: Analyze autocorrelation and partial autocorrelation of the stock data.
-- **Histogram**: View the distribution of stock prices.
-- **Marginal Histogram vs Market**: Compare marginal histograms of stock data with the market.
+* **Caching:** No need to reload everything all over again this time! Every single operation will now be saved, and brought up again in no time!
+* **Analysis:**
+    * Improved price plots navigation and visualization. Now comes with candlestick visualization.
+    * Added interactability to all plots
+    * Added AI Analysis! Now the analysis will include an opinion from an AI assistant!
+    * Added way, WAY more financial metrics, for a longer period as well!
+* **Simulation:**
+    * Fixed a bug where the metric table will sometimes bug out and return a React.js error.
+    * Minor changes to the strategies box.
+* **Additional Refinements:**
+    * Minor changes to calculations for even greater accuracy.
+    * UI tweaks for a more intuitive and visually appealing interface.
+    * Optimized web navigation for an improved browsing experience.
 
-## Usage
+## What's Changed
+* V1.1 by @HMDank in https://github.com/HMDank/finetize/pull/1
 
-To run the app locally, follow these steps:
-
-1. Clone this repository.
-2. Install the required dependencies by running `pip install -r requirements.txt`.
-3. Run the app using Streamlit by executing `streamlit run app.py` in your terminal.
-4. Access the app in your web browser at `http://localhost:8501`.
+**Full Changelog**: https://github.com/HMDank/finetize/compare/v1.0.0...v1.1.0
