@@ -1,4 +1,3 @@
-import matplotlib.pyplot as plt
 import streamlit as st
 import numpy as np
 import os
@@ -8,33 +7,12 @@ import pandas as pd
 from statsmodels.graphics.tsaplots import acf, pacf
 from statsmodels.tsa.arima.model import ARIMA
 from datetime import timedelta, datetime
-import seaborn as sns
-import matplotlib
-from matplotlib import font_manager as fm
-import plotly.figure_factory as ff
 import plotly.express as px
 import plotly.graph_objects as go
-from plotly.subplots import make_subplots
 from langchain_experimental.agents import create_pandas_dataframe_agent
 from dotenv import load_dotenv, find_dotenv
-from langchain_community.llms.openai import OpenAI, OpenAIChat
+from langchain_community.llms.openai import OpenAI
 from langchain_google_genai import GoogleGenerativeAI
-
-
-matplotlib.use('Agg')
-prop = fm.FontProperties(fname='POPPINS-REGULAR.OTF')
-plt.rcParams['font.family'] = prop.get_name()
-custom_dark_colors = {
-    'figure.facecolor': '#262730',
-    'axes.facecolor': '#262730',     # Axes background color
-    'axes.edgecolor': '#FFFFFF',     # Axes edge color
-    'text.color': '#FFFFFF',         # Text color
-    'xtick.color': '#FFFFFF',        # X-axis tick color
-    'ytick.color': '#FFFFFF',        # Y-axis tick color
-    'grid.color': '#262730',         # Grid color
-    'grid.alpha': 1               # Grid transparency
-}
-plt.rcParams.update(custom_dark_colors)
 
 market_df = fr_trade_heatmap(symbol='VNINDEX', report_type='FrBuyVal').T
 
