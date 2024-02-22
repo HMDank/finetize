@@ -39,15 +39,11 @@ def graph_col1_plots(symbol, days_away):
 
 @st.cache_data(show_spinner='Loading Financial Metrics')
 def calculate_financial_metrics(symbol):
-    st.subheader(f'Statistics of {symbol.upper()}')
-    metric_list = ['pe', 'eps', 'roe', 'pb']
-    metrics = generate_metrics(symbol, metric_list)
-    subcolumns = st.columns(len(metric_list))
-    for idx, column in enumerate(subcolumns):
-        with column:
-            st.metric(label=metric_list[idx].upper(),value=metrics[metric_list[idx]])
+    # metric_list = ['priceToEarning', 'priceToBook', 'roe', 'roa', 'earningPerShare', 'bookValuePerShare', 'interestMargin', 'badDebtPercentage']
+    metrics = generate_metrics(symbol)
+    return metrics
 
-@st.cache_data(show_spinner="Loading AI's Response")
+@st.cache_data(show_spinner="Loading AI's Response (Might take up to 5 Minutes)")
 def show_ai_response(df):
     response = generate_ai_analysis(df)
     return response
@@ -90,7 +86,9 @@ def main():
                     st.plotly_chart(plot_pacf, use_container_width=True)
                 st.subheader("Summary Statistics:")
                 st.dataframe(summary_df, hide_index=True, use_container_width=True)
-                calculate_financial_metrics(symbol)
+                metrics = calculate_financial_metrics(symbol)
+                st.subheader(f'Financial Statistics of {symbol.upper()}')
+                st.dataframe(metrics, use_container_width=True, height=440)
 
             with col2a:
                 st.subheader('Histogram')
@@ -104,8 +102,10 @@ def main():
 
         if len(symbol) == 3:
             with col0:
-                st.subheader('AI Analysis')
-                st.write(f'{show_ai_response(df)}')
+                st.markdown('<span style="color:#75AB9D; font-size: 18px; font-weight: bold; font-family: \'Roboto Mono\', monospace;">AI Analysis</span>', unsafe_allow_html=True)
+                with st.container(height=112, border=True):
+                    st.markdown('<link href="https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,100;0,300;0,400;0,700;0,900;1,100;1,300;1,400;1,700;1,900&family=Nunito+Sans:ital,opsz,wght@0,6..12,200..1000;1,6..12,200..1000&family=Roboto+Mono:ital,wght@0,100..700;1,100..700&family=Source+Sans+3:ital,wght@0,200..900;1,200..900&display=swap" rel="stylesheet">', unsafe_allow_html=True)
+                    st.markdown(f'<span style="color:#75AB9D; font-size: 14px; font-family: \'Roboto Mono\', monospace;">{show_ai_response(df)}</span>', unsafe_allow_html=True)
 
 
 if __name__ == '__main__':

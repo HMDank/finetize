@@ -3,7 +3,7 @@ import streamlit as st
 import numpy as np
 import os
 import scipy.stats as stats
-from vnstock import stock_historical_data, stock_screening_insights, fr_trade_heatmap
+from vnstock import stock_historical_data, stock_screening_insights, fr_trade_heatmap, financial_ratio
 import pandas as pd
 from statsmodels.graphics.tsaplots import acf, pacf
 from statsmodels.tsa.arima.model import ARIMA
@@ -15,9 +15,10 @@ import plotly.figure_factory as ff
 import plotly.express as px
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
-from langchain.llms import OpenAI
 from langchain_experimental.agents import create_pandas_dataframe_agent
 from dotenv import load_dotenv, find_dotenv
+from langchain_community.llms.openai import OpenAI, OpenAIChat
+from langchain_google_genai import GoogleGenerativeAI
 
 
 matplotlib.use('Agg')
@@ -137,7 +138,7 @@ def generate_histogram_plot(df):
         plot_bgcolor='#262730',
         paper_bgcolor='#262730',
         margin=dict(t=10, b=10, l=10, r=10),
-        height=600,
+        height=680,
     )
     fig.update_xaxes(showline=True,
                      linewidth=1,
@@ -210,21 +211,20 @@ def generate_scatter_plot(df, days_away):
     return fig
 
 
-def generate_metrics(symbol, metric_list):
+def generate_metrics(symbol):
     try:
-        params = {
-                "exchangeName": "HOSE,HNX",
-                }
-        df = stock_screening_insights(params, size=1700)
-        df = df[df['ticker'] == symbol.upper()][metric_list]
-        return df.iloc[0].to_dict()
+        df = financial_ratio(symbol, 'yearly')
+        return df.drop('ticker').to_dict()
     except Exception:
         st.error("Can't generate financial metrics")
 
 
 def generate_ai_analysis(df):
-    apikey = "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"
-    llm = OpenAI(api_key=apikey)
-    pandas_agent = create_pandas_dataframe_agent(llm, df, verbose=True)
-    trends = pandas_agent.run(f"Analyze trends, seasonality, and cyclic patterns of 'close'")
+    load_dotenv(find_dotenv('key.env'))
+    GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
+    OPENAI_API_KEY = os.getenv("GPT_API_KEY")
+    llm1 = GoogleGenerativeAI(model="gemini-pro", google_api_key=GOOGLE_API_KEY)
+    llm2 = OpenAI(temperature=0, api_key=OPENAI_API_KEY)
+    pandas_agent = create_pandas_dataframe_agent(llm2, df, verbose=True)
+    trends = pandas_agent.run(f"This is a data of the price of a stock symbol. Tell me the direction of the 'close' column over time and a pattern if it exists")
     return trends
