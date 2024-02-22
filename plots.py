@@ -197,9 +197,8 @@ def generate_metrics(symbol):
 
 
 def generate_ai_analysis(df):
-    load_dotenv(find_dotenv('key.env'))
-    GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
-    OPENAI_API_KEY = os.getenv("GPT_API_KEY")
+    # GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
+    OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
     # llm1 = GoogleGenerativeAI(model="gemini-pro", google_api_key=GOOGLE_API_KEY)
     llm2 = OpenAI(temperature=0, api_key=OPENAI_API_KEY)
     pandas_agent = create_pandas_dataframe_agent(llm2, df, verbose=True)
