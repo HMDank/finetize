@@ -5,10 +5,24 @@ from scipy.stats import rv_histogram
 from tqdm import tqdm
 from plots import get_stock_data
 import random
+import matplotlib
 from statsmodels.tools.sm_exceptions import ConvergenceWarning
 import warnings
 warnings.filterwarnings('ignore', category=ConvergenceWarning)
 
+matplotlib.use('Agg')
+plt.rcParams['font.family'] = "Poppins"
+custom_dark_colors = {
+    'figure.facecolor': '#262730',
+    'axes.facecolor': '#262730',     # Axes background color
+    'axes.edgecolor': '#FFFFFF',     # Axes edge color
+    'text.color': '#FFFFFF',         # Text color
+    'xtick.color': '#FFFFFF',        # X-axis tick color
+    'ytick.color': '#FFFFFF',        # Y-axis tick color
+    'grid.color': '#262730',         # Grid color
+    'grid.alpha': 1               # Grid transparency
+}
+plt.rcParams.update(custom_dark_colors)
 
 def calculate_next_wealth(f, current_wealth):
     df = get_stock_data(symbol, days_away=days_away)
