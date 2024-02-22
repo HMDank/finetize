@@ -5,7 +5,6 @@ import scipy.stats as stats
 from vnstock import stock_historical_data, stock_screening_insights, fr_trade_heatmap, financial_ratio
 import pandas as pd
 from statsmodels.graphics.tsaplots import acf, pacf
-from statsmodels.tsa.arima.model import ARIMA
 from datetime import timedelta, datetime
 import plotly.express as px
 import plotly.graph_objects as go
@@ -198,9 +197,10 @@ def generate_metrics(symbol):
 
 def generate_ai_analysis(df):
     # GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
+    load_dotenv()
     OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
     # llm1 = GoogleGenerativeAI(model="gemini-pro", google_api_key=GOOGLE_API_KEY)
-    llm2 = OpenAI(temperature=0, api_key=OPENAI_API_KEY)
+    llm2 = OpenAI(temperature=0, openai_api_key=OPENAI_API_KEY)
     pandas_agent = create_pandas_dataframe_agent(llm2, df, verbose=True)
     trends = pandas_agent.run(f"This is a data of the price of a stock symbol. Tell me the direction of the 'close' column over time and a pattern if it exists")
     return trends
