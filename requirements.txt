@@ -156,7 +156,7 @@ installer==0.7.0
 intake @ file:///C:/ci_311_rebuilds/intake_1678999914269/work
 intervaltree @ file:///Users/ktietz/demo/mc3/conda-bld/intervaltree_1630511889664/work
 ipykernel @ file:///C:/b/abs_07rkft_vaz/croot/ipykernel_1691121700587/work
-ipython==8.12.3
+ipython
 ipython-genutils @ file:///tmp/build/80754af9/ipython_genutils_1606773439826/work
 ipywidgets @ file:///C:/b/abs_5awapknmz_/croot/ipywidgets_1679394824767/work
 isort @ file:///tmp/build/80754af9/isort_1628603791788/work
