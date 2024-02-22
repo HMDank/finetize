@@ -12,7 +12,6 @@ import plotly.graph_objects as go
 from langchain_experimental.agents import create_pandas_dataframe_agent
 from dotenv import load_dotenv, find_dotenv
 from langchain_community.llms.openai import OpenAI
-from langchain_google_genai import GoogleGenerativeAI
 
 market_df = fr_trade_heatmap(symbol='VNINDEX', report_type='FrBuyVal').T
 
@@ -201,7 +200,7 @@ def generate_ai_analysis(df):
     load_dotenv(find_dotenv('key.env'))
     GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
     OPENAI_API_KEY = os.getenv("GPT_API_KEY")
-    llm1 = GoogleGenerativeAI(model="gemini-pro", google_api_key=GOOGLE_API_KEY)
+    # llm1 = GoogleGenerativeAI(model="gemini-pro", google_api_key=GOOGLE_API_KEY)
     llm2 = OpenAI(temperature=0, api_key=OPENAI_API_KEY)
     pandas_agent = create_pandas_dataframe_agent(llm2, df, verbose=True)
     trends = pandas_agent.run(f"This is a data of the price of a stock symbol. Tell me the direction of the 'close' column over time and a pattern if it exists")
