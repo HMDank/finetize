@@ -73,7 +73,7 @@ vnstock==0.2.8.9
 watchdog==4.0.0
 yarl==1.9.4
 zipp==3.17.0
-
+plotly==5.18.0
 openai==1.12.0
 
 tqdm==4.66.2
