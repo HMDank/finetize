@@ -47,3 +47,9 @@ else:
                 st.dataframe(stats, width=400)
             st.subheader(f'Simulation of {choice} strategy')
             st.pyplot(plot)
+
+try:
+    with st.sidebar:
+        st.write(st.page_link("https://www.linkedin.com/in/hmdank/", label="@dank"))
+except Exception:
+    pass
