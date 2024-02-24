@@ -1,8 +1,8 @@
 # finetize
 
-## Welcome to Finetize v1.1! 
-
 ![image](https://github.com/HMDank/finetize/assets/109755535/5af310a6-afcf-4cb9-af50-a3b8a0e3bea6)
+
+## Welcome to Finetize v1.1! 
 
 **Changes made to v1.0:**
 
