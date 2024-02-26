@@ -45,7 +45,8 @@ def calculate_financial_metrics(symbol):
 
 @st.cache_data(show_spinner="Loading AI's Response (Might take up to 5 Minutes)")
 def show_ai_response(df):
-    response = generate_ai_analysis(df, key=st.secrets['apikey'])
+    response = 'Unavailable'
+    #response = generate_ai_analysis(df, key=st.secrets['apikey'])
     return response
 
 
@@ -88,7 +89,7 @@ def main():
                 st.dataframe(summary_df, hide_index=True, use_container_width=True)
                 metrics = calculate_financial_metrics(symbol)
                 st.subheader(f'Financial Statistics of {symbol.upper()}')
-                st.dataframe(metrics, use_container_width=True, height=440)
+                st.dataframe(metrics, use_container_width=True, height=520)
 
             with col2a:
                 st.subheader('Histogram')
