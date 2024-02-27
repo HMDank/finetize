@@ -129,7 +129,7 @@ def simulate_trading(choice, period, prices, amt, order, verbose=False, plot=Tru
             buying_price.clear()
             sell_amount = total_shares_held  # $random.randint(1, total_shares_held) if total_shares_held > 1 else 1
             sell_price = current_price
-            amt += sell_price*sell_amount
+            amt += sell_price*sell_amount*0.9975
             ret = (sell_price - buy_price) / buy_price
             events_list.append(('s', date, sell_price, ret, sell_amount, amt))
             total_shares_held -= sell_amount

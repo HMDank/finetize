@@ -10,6 +10,21 @@ st.set_page_config(layout="wide",
                    page_title='Stock Analysis')
 
 
+def draw_data(column, stats, choice, plot):
+    with column:
+        st.write('')
+        st.write('')
+        st.write('')
+        st.write('')
+        st.dataframe(stats, width=400)
+    st.subheader(f'Simulation of `{choice}` strategy')
+    st.pyplot(plot)
+    cola, colb, colc = st.columns(3)
+    with colc:
+        with st.expander('Assumptions:'):
+            st.write('Additional fees account for `0.25%`')
+
+
 def simulate(choice, symbol, days_away, period, order):
     df = get_stock_data(symbol, days_away=days_away)
     plot, stats = simulate_trading(choice, period, df['close'], 100_000_000, order, verbose=False, plot=True)
@@ -22,7 +37,7 @@ else:
     col1, col2 = st.columns(2)
     with col1:
         st.title('Strategy Simulation')
-        st.write('Simulating buy and selling', st.session_state['symbol'], 'within the last', st.session_state['days_away'], 'days')
+        st.write(f"Simulating buy and selling `{st.session_state['symbol']}` within the last `{st.session_state['days_away']}` days")
         col1s, col2s = st.columns(2)
         with col1s:
             choice = st.selectbox('Pick a Strategy', options=["Random", "Momentum", 'Mean Reversion', 'ARIMA'], label_visibility='collapsed', placeholder='Pick a Strategy', index=None)
@@ -45,27 +60,13 @@ else:
         else:
             plot, stats = simulate(choice, st.session_state['symbol'], st.session_state['days_away'], period, order)
             st.session_state['period'] = period
-            with col2:
-                st.write('')
-                st.write('')
-                st.write('')
-                st.write('')
-                st.dataframe(stats, width=400)
-            st.subheader(f'Simulation of {choice} strategy')
-            st.pyplot(plot)
+            draw_data(col2, stats, choice, plot)
     if Auto:
         df = get_stock_data(st.session_state['symbol'], days_away=st.session_state['days_away'])
         best_period = optimize_choice(choice, df['close'])
         st.session_state['period'] = best_period
         plot, stats = simulate(choice, st.session_state['symbol'], st.session_state['days_away'], best_period, order)
-        with col2:
-            st.write('')
-            st.write('')
-            st.write('')
-            st.write('')
-            st.dataframe(stats, width=400)
-        st.subheader(f'Simulation of {choice} strategy')
-        st.pyplot(plot)
+        draw_data(col2, stats, choice, plot)
 
 try:
     with st.sidebar:
