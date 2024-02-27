@@ -45,8 +45,8 @@ def calculate_financial_metrics(symbol):
 
 @st.cache_data(show_spinner="Loading AI's Response (Might take up to 5 Minutes)")
 def show_ai_response(df):
-    response = 'Unavailable'
-    #response = generate_ai_analysis(df, key=st.secrets['apikey'])
+    #response = 'Unavailable'
+    response = generate_ai_analysis(df, key=st.secrets['apikey'])
     return response
 
 
