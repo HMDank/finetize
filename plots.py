@@ -97,7 +97,7 @@ def generate_data_plot(df, data_selection):
 
 
 def generate_histogram_plot(df):
-    prices = df['close']
+    prices = df['close'].dropna()
     returns = prices.pct_change().dropna()
 
     kde = stats.gaussian_kde(returns)
@@ -158,10 +158,10 @@ def generate_acf_plots(series, plot_pacf=False):
 
 def generate_scatter_plot(df, days_away):
     # Extract prices and returns
-    prices = df['close']
+    prices = df['close'].dropna()
     returns = prices.pct_change().dropna()
     market_prices = get_stock_data('VNINDEX', days_away)
-    market_prices = market_prices['close']
+    market_prices = market_prices['close'].dropna()
     market_returns = market_prices.pct_change().dropna()
 
 # Plot the scatter plot with marginal histograms

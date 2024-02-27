@@ -10,12 +10,9 @@ st.set_page_config(layout="wide",
                    page_title='Stock Analysis')
 
 
-@st.cache_resource(hash_funcs={matplotlib.figure.Figure: hash})
 def simulate(choice, symbol, days_away, period, order):
-    # Your simulation code here
     df = get_stock_data(symbol, days_away=days_away)
     plot, stats = simulate_trading(choice, period, df['close'], 100_000_000, order, verbose=False, plot=True)
-
     return plot, stats
 
 
@@ -40,13 +37,13 @@ else:
             Simulate = st.button('Simulate')
             st.write('')
             st.write('')
-            Auto = st.button('Auto') if (choice == 'Momentum' or choice == 'Mean Reversion') else None
+            Auto = st.button('Auto', help='Auto generate the best period for returns') if (choice == 'Momentum' or choice == 'Mean Reversion') else None
     if Simulate:
         if choice is None:
             with col1s:
                 st.error('Please pick a Strategy before running the simulation')
         else:
-            plot_hash, stats = simulate(choice, st.session_state['symbol'], st.session_state['days_away'], period, order)
+            plot, stats = simulate(choice, st.session_state['symbol'], st.session_state['days_away'], period, order)
             st.session_state['period'] = period
             with col2:
                 st.write('')
@@ -55,12 +52,12 @@ else:
                 st.write('')
                 st.dataframe(stats, width=400)
             st.subheader(f'Simulation of {choice} strategy')
-            st.pyplot(plot_hash)
+            st.pyplot(plot)
     if Auto:
         df = get_stock_data(st.session_state['symbol'], days_away=st.session_state['days_away'])
         best_period = optimize_choice(choice, df['close'])
         st.session_state['period'] = best_period
-        plot_hash, stats = simulate(choice, st.session_state['symbol'], st.session_state['days_away'], best_period, order)
+        plot, stats = simulate(choice, st.session_state['symbol'], st.session_state['days_away'], best_period, order)
         with col2:
             st.write('')
             st.write('')
@@ -68,7 +65,7 @@ else:
             st.write('')
             st.dataframe(stats, width=400)
         st.subheader(f'Simulation of {choice} strategy')
-        st.pyplot(plot_hash)
+        st.pyplot(plot)
 
 try:
     with st.sidebar:

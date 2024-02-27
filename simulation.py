@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 from statsmodels.tsa.arima.model import ARIMA
 from scipy.stats import rv_histogram
 from tqdm import tqdm
@@ -105,6 +106,7 @@ def simulate_trading(choice, period, prices, amt, order, verbose=False, plot=Tru
                     return 'sell'
             return 'wait'
     returns = prices.pct_change().dropna()
+    returns = returns[~returns.index.duplicated(keep='first')]
     events_list = []
     buy_price = None
     init_amt = amt
@@ -113,6 +115,9 @@ def simulate_trading(choice, period, prices, amt, order, verbose=False, plot=Tru
     rate = []
 
     for date, r in tqdm(returns.items(), total=len(returns)):
+        current_price = prices.loc[date]
+        if isinstance(current_price, pd.Series):
+            current_price = prices.loc[date].iloc[0]
         rate.append(r)
         action = decide(rate, choice, period, order)
         if action == 'wait':
@@ -123,7 +128,7 @@ def simulate_trading(choice, period, prices, amt, order, verbose=False, plot=Tru
             buy_price = sum(buying_price) / len(buying_price) if len(buying_price) > 0 else buy_price
             buying_price.clear()
             sell_amount = total_shares_held  # $random.randint(1, total_shares_held) if total_shares_held > 1 else 1
-            sell_price = prices.loc[date]
+            sell_price = current_price
             amt += sell_price*sell_amount
             ret = (sell_price - buy_price) / buy_price
             events_list.append(('s', date, sell_price, ret, sell_amount, amt))
@@ -134,7 +139,7 @@ def simulate_trading(choice, period, prices, amt, order, verbose=False, plot=Tru
                 print(f'Actual Return: %s, {total_shares_held} shares left' % (round(ret * 100, 4)))
                 print('=======================================')
 
-        elif action == 'buy' and amt > prices.loc[date]:
+        elif action == 'buy' and amt > current_price:
             buy_price = prices.loc[date]
             buy_amount = int(amt/buy_price)
             amt -= buy_price*buy_amount
@@ -143,7 +148,6 @@ def simulate_trading(choice, period, prices, amt, order, verbose=False, plot=Tru
             total_shares_held += buy_amount
             if verbose:
                 print(f'Bought {buy_amount} stocks at {buy_price}, {amt} remaining')
-
 
     if verbose:
         print('Total Amount: $%s' % round(amt, 2))
