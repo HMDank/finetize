@@ -3,7 +3,7 @@ import numpy as np
 from statsmodels.tsa.arima.model import ARIMA
 from scipy.stats import rv_histogram
 from tqdm import tqdm
-from plots import get_stock_data
+from plots import get_stock_data, stock_screening_insights
 import random
 import matplotlib
 from statsmodels.tools.sm_exceptions import ConvergenceWarning
@@ -11,7 +11,6 @@ import warnings
 warnings.filterwarnings('ignore', category=ConvergenceWarning)
 
 matplotlib.use('Agg')
-plt.rcParams['font.family'] = "Poppins"
 custom_dark_colors = {
     'figure.facecolor': '#262730',
     'axes.facecolor': '#262730',     # Axes background color
@@ -23,6 +22,7 @@ custom_dark_colors = {
     'grid.alpha': 1               # Grid transparency
 }
 plt.rcParams.update(custom_dark_colors)
+
 
 def calculate_next_wealth(f, current_wealth):
     df = get_stock_data(symbol, days_away=days_away)
@@ -41,13 +41,13 @@ def calculate_final_return(f, iterations):
     return cur_wealth
 
 
-def analyze(events_list, amt, prices):
+def analyze(events_list, amt, total_asset):
     trading_volume = 0  # Total dollar trading volume
     total_shares_held = 0  # Total number of shares held
     book_size = amt  # Initial book size
     pnl_values = []
     if not events_list:
-        return {'Turnover': 0, 'Sharpe': np.nan, 'Margin': np.nan}
+        return {'Turnover': 0, 'Sharpe': np.nan, 'Margin': np.nan, 'Return': 0}
 
     for event in events_list:
         cur_price = event[2]
@@ -69,44 +69,41 @@ def analyze(events_list, amt, prices):
     if std_dev_pnl != 0:  # Avoid division by zero
         pnl_ratio = average_pnl / std_dev_pnl
     else:
-        pnl_ratio = np.nan  # Handle division by zero
+        pnl_ratio = np.nan
     book_size = final_book_size if final_book_size > 0 else 0
     # Calculate daily turnover
-    if book_size != 0:  # Avoid division by zero
-        daily_turnover = (trading_volume / book_size) * 100  # Calculate turnover as a percentage
+    if book_size != 0:
+        daily_turnover = (trading_volume / book_size) * 100
     else:
         daily_turnover = 0
-
-    return {'Turnover': round(daily_turnover, 2), 'Sharpe': round(pnl_ratio, 2), 'Margin': round(average_pnl/trading_volume, 2)}
-
-
-def decide(rate, choice, period, order):
-    if choice == 'Random':
-        return random.choice(['buy', 'sell','wait'])
-    if choice == 'Momentum':
-        if len(rate) < period:
-            return 'wait'
-        if sum(rate[-period:]) / period > 0:
-            return 'buy'
-        return 'sell'
-    if choice == 'Mean Reversion':
-        if len(rate) < period + 1:
-            return 'wait'
-        if sum(rate[-(period+1):-1]) / period > rate[-1]:
-            return 'buy'
-        return 'sell'
-    if choice == 'ARIMA':
-        if len(rate) > 30:
-            model = ARIMA(rate, order=order).fit()
-            prediction = model.forecast(steps=1)
-            if prediction > 0.001:
-                return 'buy'
-            if prediction < -0.001:
-                return 'sell'
-        return 'wait'
+    return {'Turnover': round(daily_turnover, 2), 'Sharpe': round(pnl_ratio, 2), 'Margin': round(average_pnl/trading_volume, 2), 'Return': total_asset/100 - 1}
 
 
 def simulate_trading(choice, period, prices, amt, order, verbose=False, plot=True):
+    def decide(rate, choice, period, order):
+        if choice == 'Random':
+            return random.choice(['buy', 'sell', 'wait'])
+        if choice == 'Momentum':
+            if len(rate) < period:
+                return 'wait'
+            if sum(rate[-period:]) / period > 0:
+                return 'buy'
+            return 'sell'
+        if choice == 'Mean Reversion':
+            if len(rate) < period + 1:
+                return 'wait'
+            if sum(rate[-(period+1):-1]) / period > rate[-1]:
+                return 'buy'
+            return 'sell'
+        if choice == 'ARIMA':
+            if len(rate) > 30:
+                model = ARIMA(rate, order=order).fit()
+                prediction = model.forecast(steps=1)
+                if prediction > 0.001:
+                    return 'buy'
+                if prediction < -0.001:
+                    return 'sell'
+            return 'wait'
     returns = prices.pct_change().dropna()
     events_list = []
     buy_price = None
@@ -129,7 +126,7 @@ def simulate_trading(choice, period, prices, amt, order, verbose=False, plot=Tru
             sell_price = prices.loc[date]
             amt += sell_price*sell_amount
             ret = (sell_price - buy_price) / buy_price
-            events_list.append(('s', date, sell_price, ret, sell_amount))
+            events_list.append(('s', date, sell_price, ret, sell_amount, amt))
             total_shares_held -= sell_amount
 
             if verbose:
@@ -147,9 +144,14 @@ def simulate_trading(choice, period, prices, amt, order, verbose=False, plot=Tru
             if verbose:
                 print(f'Bought {buy_amount} stocks at {buy_price}, {amt} remaining')
 
+
     if verbose:
         print('Total Amount: $%s' % round(amt, 2))
-    stats = analyze(events_list, amt, prices)
+
+    total_return = round(100*((amt + total_shares_held*prices.iloc[-1]) / init_amt - 1), 2)
+    total_return = str(total_return) + '%'
+    total_asset = round((amt + total_shares_held*prices.iloc[-1])/1000000, 2)
+    stats = analyze(events_list, amt, total_asset)
     # graph
     if plot:
         fig, ax = plt.subplots(figsize=(10, 4))
@@ -173,12 +175,48 @@ def simulate_trading(choice, period, prices, amt, order, verbose=False, plot=Tru
                                  event[1], events_list[buy_index][1],
                                  color=color, alpha=0.2)
                 ax.axvline(event[1], color='k', linestyle='--', alpha=0.4)
-
-        tot_return = round(100*((amt + total_shares_held*prices.iloc[-1]) / init_amt - 1), 2)
-        tot_return = str(tot_return) + '%'
-        ax.set_title("Total Asset: %sM, Total Return: %s\nShares Left: %s" % (round((amt + total_shares_held*prices.iloc[-1])/1000000, 2), tot_return, total_shares_held), fontsize=20)
+        ax.set_title("%s(%s)\nTotal Asset: %sM, Total Return: %s\nShares Left: %s" %(choice, period if period is not None else order, total_asset, total_return, total_shares_held), fontsize=20)
         ax.set_ylim(prices.min() * 0.95, prices.max() * 1.05)
-
         return fig, stats
 
-    return None
+    return stats
+
+
+def optimize_choice(choice, prices):
+    all_returns = {}
+    for period in range(1, 31, 1):
+        stats = simulate_trading(choice, period, prices, 100_000_000, 0, verbose=False, plot=False)
+        all_returns[period] = stats['Return']
+    best_period = max(all_returns, key=all_returns.get)
+    return best_period
+
+
+def test_market(choice, period, days_away):
+    results = {}
+    params = {
+                "exchangeName": "HOSE",
+                }
+    tickers = stock_screening_insights(params, size=1700)['ticker']
+    for ticker in tickers:
+        try:
+            df = get_stock_data(ticker, days_away)
+            stats = simulate_trading(choice, period, df['close'], 100_000_000, 0, verbose=False, plot=False)
+            results[ticker] = stats['Return']
+        except Exception:
+            results[ticker] = None
+    return results
+
+
+def split_results(results):
+    wins = {}
+    losses = {}
+
+    for key, value in results.items():
+        if not value:
+            continue
+        if value > 0:
+            wins[key] = value
+        else:
+            losses[key] = value
+
+    return wins, losses
