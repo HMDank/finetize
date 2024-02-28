@@ -23,7 +23,7 @@ def draw_data(column, stats, choice, plot):
     with cola:
         baseline0 = simulate_buy_hold(df['close'])
         st.metric(label='Buy and Hold', value=f'{baseline0*100:.2f}%',
-                  delta=f'{(stats["Return"] - baseline0)*100:.2f}%', help='Buy at the start of ')
+                  delta=f'{(stats["Return"] - baseline0)*100:.2f}%', help='Buy at the very start and sell at the very end')
     with colc:
         with st.expander('Assumptions:'):
             st.write('Taxes account for `0.1%`')
