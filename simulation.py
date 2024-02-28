@@ -113,8 +113,11 @@ def simulate_trading(choice, period, prices, amt, order, verbose=False, plot=Tru
     total_shares_held = 0
     buying_price = []
     rate = []
-
+    last_selling_event = 0
     for date, r in tqdm(returns.items(), total=len(returns)):
+        if last_selling_event > 0:
+            last_selling_event -= 1
+            continue
         current_price = prices.loc[date]
         if isinstance(current_price, pd.Series):
             current_price = prices.loc[date].iloc[0]
@@ -129,10 +132,11 @@ def simulate_trading(choice, period, prices, amt, order, verbose=False, plot=Tru
             buying_price.clear()
             sell_amount = total_shares_held  # $random.randint(1, total_shares_held) if total_shares_held > 1 else 1
             sell_price = current_price
-            amt += sell_price*sell_amount*0.9975
+            amt += sell_price*sell_amount*0.9975*0.999
             ret = (sell_price - buy_price) / buy_price
             events_list.append(('s', date, sell_price, ret, sell_amount, amt))
             total_shares_held -= sell_amount
+            last_selling_event = 1
 
             if verbose:
                 print(f'Sold {sell_amount} stocks at %s. Current asset: {amt}' % sell_price)
@@ -140,7 +144,7 @@ def simulate_trading(choice, period, prices, amt, order, verbose=False, plot=Tru
                 print('=======================================')
 
         elif action == 'buy' and amt > current_price:
-            buy_price = prices.loc[date]
+            buy_price = current_price
             buy_amount = int(amt/buy_price)
             amt -= buy_price*buy_amount
             buying_price.append(buy_price)
@@ -224,3 +228,7 @@ def split_results(results):
             losses[key] = value
 
     return wins, losses
+
+
+def simulate_buy_hold(prices):
+    return prices[-1] / prices[0] - 1
