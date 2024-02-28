@@ -1,26 +1,20 @@
 # finetize
 
-![image](https://github.com/HMDank/finetize/assets/109755535/5af310a6-afcf-4cb9-af50-a3b8a0e3bea6)
+![image](https://github.com/HMDank/finetize/assets/109755535/355e7725-4102-48de-8618-992619467324)
 
-## Welcome to Finetize v1.1! 
+## Welcome to Finetize v1.2! 
 
-**Changes made to v1.0:**
+**Changes made to v1.1:**
 
-* **Caching:** No need to reload everything all over again this time! Every single operation will now be saved, and brought up again in no time!
 * **Analysis:**
-    * Improved price plots navigation and visualization. Now comes with candlestick visualization.
-    * Added interactability to all plots
-    * Added AI Analysis! Now the analysis will include an opinion from an AI assistant!
-    * Added way, WAY more financial metrics, for a longer period as well!
+    * HUGE data improvements. Now the plot will be precise down to each trading day (some price data was missing before, leading to inaccurate simulation and symbol analysis).
+    * Further improved price plots navigation and visualization. 
 * **Simulation:**
-    * Fixed a bug where the metric table will sometimes bug out and return a React.js error.
-    * Minor changes to the strategies box.
-* **Additional Refinements:**
-    * Minor changes to calculations for even greater accuracy.
-    * UI tweaks for a more intuitive and visually appealing interface.
-    * Optimized web navigation for an improved browsing experience.
+    * Added an Auto button to select the lookback days with the greatest return.
+    * Added a baseline model: Buy and Hold, for a more intuitive comparison
+    * Added real world Assumptions (Taxes, Fees, Delays) for a more realistic simulation.
+* **[NEW!] Test:**
+    * Added for strategy comparison against, well, the entire market!
+    * See which symbol the strategy worked best against, and which it lost the most!
 
-## What's Changed
-* V1.1 by @HMDank in https://github.com/HMDank/finetize/pull/1
-
-**Full Changelog**: https://github.com/HMDank/finetize/compare/v1.0.0...v1.1.0
+*Some minor changes to the UI and Navigation system.
