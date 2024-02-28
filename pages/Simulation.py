@@ -4,7 +4,7 @@ import io
 import matplotlib as plt
 import matplotlib
 from plots import get_stock_data
-from simulation import simulate_trading, optimize_choice, test_market
+from simulation import simulate_trading, optimize_choice, simulate_buy_hold
 
 st.set_page_config(layout="wide",
                    page_title='Stock Analysis')
@@ -20,9 +20,15 @@ def draw_data(column, stats, choice, plot):
     st.subheader(f'Simulation of `{choice}` strategy')
     st.pyplot(plot)
     cola, colb, colc = st.columns(3)
+    with cola:
+        baseline0 = simulate_buy_hold(df['close'])
+        st.metric(label='Buy and Hold', value=f'{baseline0*100:.2f}%',
+                  delta=f'{(stats["Return"] - baseline0)*100:.2f}%')
     with colc:
         with st.expander('Assumptions:'):
-            st.write('Additional fees account for `0.25%`')
+            st.write('Taxes account for `0.1%`')
+            st.write('Transaction fees account for `0.25%`')
+            st.write('Money will return after `1` day when selling')
 
 
 def simulate(choice, symbol, days_away, period, order):
@@ -54,6 +60,7 @@ else:
             st.write('')
             Auto = st.button('Auto', help='Auto generate the best period for returns') if (choice == 'Momentum' or choice == 'Mean Reversion') else None
     if Simulate:
+        df = get_stock_data(st.session_state['symbol'], days_away=st.session_state['days_away'])
         if choice is None:
             with col1s:
                 st.error('Please pick a Strategy before running the simulation')
