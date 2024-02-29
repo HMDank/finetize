@@ -5,6 +5,7 @@ from statsmodels.tsa.arima.model import ARIMA
 from scipy.stats import rv_histogram
 from tqdm import tqdm
 from plots import get_stock_data, stock_screening_insights
+from vnstock import general_rating
 import random
 import matplotlib
 from statsmodels.tools.sm_exceptions import ConvergenceWarning
@@ -40,6 +41,19 @@ def calculate_final_return(f, iterations):
     for _ in range(iterations):
         cur_wealth = calculate_next_wealth(f, cur_wealth)
     return cur_wealth
+
+
+def calculate_position_sizing(symbol, prices):
+    returns = prices.pct_change().dropna()
+    returns = returns[~returns.index.duplicated(keep='first')]
+    p = (returns > 0).sum()
+    p /= len(returns)
+
+    beta = general_rating(symbol).T.loc['beta', 0]
+    expected_market_return = 0.1
+    bank_rate = 0.045
+    CAPM_return = (bank_rate + beta*(expected_market_return - bank_rate)) * 100
+    return (CAPM_return*p + (1-p))/CAPM_return
 
 
 def analyze(events_list, amt, total_asset):
@@ -80,7 +94,7 @@ def analyze(events_list, amt, total_asset):
     return {'Turnover': round(daily_turnover, 2), 'Sharpe': round(pnl_ratio, 2), 'Margin': round(average_pnl/trading_volume, 2), 'Return': total_asset/100 - 1}
 
 
-def simulate_trading(choice, period, prices, amt, order, verbose=False, plot=True):
+def simulate_trading(choice, period, symbol, days_away, amt, order, position_sizing, verbose=False, plot=True):
     def decide(rate, choice, period, order):
         if choice == 'Random':
             return random.choice(['buy', 'sell', 'wait'])
@@ -105,8 +119,10 @@ def simulate_trading(choice, period, prices, amt, order, verbose=False, plot=Tru
                 if prediction < -0.001:
                     return 'sell'
             return 'wait'
+    prices = get_stock_data(symbol, days_away)['close']
     returns = prices.pct_change().dropna()
     returns = returns[~returns.index.duplicated(keep='first')]
+
     events_list = []
     buy_price = None
     init_amt = amt
@@ -143,9 +159,9 @@ def simulate_trading(choice, period, prices, amt, order, verbose=False, plot=Tru
                 print(f'Actual Return: %s, {total_shares_held} shares left' % (round(ret * 100, 4)))
                 print('=======================================')
 
-        elif action == 'buy' and amt > current_price:
+        elif action == 'buy' and amt*position_sizing > current_price:
             buy_price = current_price
-            buy_amount = int(amt/buy_price)
+            buy_amount = int(amt*position_sizing/buy_price)
             amt -= buy_price*buy_amount
             buying_price.append(buy_price)
             events_list.append(('b', date, buy_price, buy_amount))
@@ -172,13 +188,29 @@ def simulate_trading(choice, period, prices, amt, order, verbose=False, plot=Tru
         for tick in y_ticks:
             ax.axhline(tick, color='black', linestyle='-', linewidth=0.8, alpha=0.2)
         buy_index = 0
+        buy_amounts = [event[3] for event in events_list]
+        date_proportion_dict = {}
+        for event in events_list:
+            date = event[1]
+            buy_amount = event[3]
+            proportion = buy_amount / (max(buy_amounts)*3)
+            date_proportion_dict[date] = proportion
 
         for idx, event in enumerate(events_list):
-            if event[0] == 'b' and events_list[idx - 1][0] == 's':
-                buy_index = idx
-                ax.axvline(event[1], color='k', linestyle='--', alpha=0.4)
+            if event[0] == 'b':
+                if idx == 0:
+                    buy_index = idx
+                    ax.axvline(event[1], color='k', linestyle='--', alpha=0.45)
+                    continue
+                if events_list[idx - 1][0] == 's':
+                    buy_index = idx
+                    ax.axvline(event[1], color='k', linestyle='--', alpha=0.45)
+                else:
+                    proportion = date_proportion_dict[event[1]]
+                    ax.axvline(event[1], color='white', linestyle='-', alpha=0.15, ymin=0, ymax=proportion)
+
             if event[0] == 's':
-                color = 'green' if event[3] > 0 else ('white' if event[3] == 0 else 'red')
+                color = 'green' if event[3] > 0 else ('yellow' if event[3] == 0 else 'red')
                 ax.fill_betweenx(range(int(prices.min()*.5), int(prices.max()*1.5)),
                                  event[1], events_list[buy_index][1],
                                  color=color, alpha=0.2)
@@ -190,10 +222,10 @@ def simulate_trading(choice, period, prices, amt, order, verbose=False, plot=Tru
     return stats
 
 
-def optimize_choice(choice, prices):
+def optimize_choice(choice, symbol, days_away, position_sizing):
     all_returns = {}
     for period in range(1, 31, 1):
-        stats = simulate_trading(choice, period, prices, 100_000_000, 0, verbose=False, plot=False)
+        stats = simulate_trading(choice, period, symbol, days_away, 100_000_000, 0, position_sizing, verbose=False, plot=False)
         all_returns[period] = stats['Return']
     best_period = max(all_returns, key=all_returns.get)
     return best_period
@@ -207,8 +239,7 @@ def test_market(choice, period, days_away):
     tickers = stock_screening_insights(params, size=1700)['ticker']
     for ticker in tickers:
         try:
-            df = get_stock_data(ticker, days_away)
-            stats = simulate_trading(choice, period, df['close'], 100_000_000, 0, verbose=False, plot=False)
+            stats = simulate_trading(choice, period, ticker, days_away, 100_000_000, 0, verbose=False, plot=False)
             results[ticker] = stats['Return']
         except Exception:
             results[ticker] = None
@@ -230,5 +261,6 @@ def split_results(results):
     return wins, losses
 
 
-def simulate_buy_hold(prices):
-    return prices[-1] / prices[0] - 1
+def simulate_buy_hold(symbol, days_away):
+    prices = get_stock_data(symbol, days_away)['close']
+    return prices.iloc[-1] / prices.iloc[0] - 1

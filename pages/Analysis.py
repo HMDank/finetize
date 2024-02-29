@@ -1,5 +1,6 @@
 import streamlit as st
 from plots import generate_data_plot, generate_acf_plots, generate_histogram_plot, get_stock_data, generate_metrics, generate_scatter_plot, generate_ai_analysis
+from simulation import calculate_position_sizing
 import pandas as pd
 import traceback
 st.set_page_config(layout="wide",
@@ -101,12 +102,19 @@ def main():
             tb_str = traceback.format_exception(type(e), e, e.__traceback__)
             st.error(f"{tb_str}")
 
+        position_sizing = calculate_position_sizing(st.session_state['symbol'], df['close'])
+        if 'position_sizing' not in st.session_state:
+                st.session_state['position_sizing'] = 1
+        st.session_state['position_sizing'] = position_sizing
+
         if len(symbol) == 3:
             with col0:
                 st.markdown('<span style="color:#75AB9D; font-size: 18px; font-weight: bold; font-family: \'Roboto Mono\', monospace;">AI Analysis</span>', unsafe_allow_html=True)
                 with st.container(height=112, border=True):
                     st.markdown('<link href="https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,100;0,300;0,400;0,700;0,900;1,100;1,300;1,400;1,700;1,900&family=Nunito+Sans:ital,opsz,wght@0,6..12,200..1000;1,6..12,200..1000&family=Roboto+Mono:ital,wght@0,100..700;1,100..700&family=Source+Sans+3:ital,wght@0,200..900;1,200..900&display=swap" rel="stylesheet">', unsafe_allow_html=True)
                     st.markdown(f'<span style="color:#75AB9D; font-size: 14px; font-family: \'Roboto Mono\', monospace;">{show_ai_response(df)}</span>', unsafe_allow_html=True)
+
+
     try:
         with st.sidebar:
             st.write(st.page_link("https://www.linkedin.com/in/hmdank/", label="@dank"))

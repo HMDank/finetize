@@ -21,20 +21,16 @@ def draw_data(column, stats, choice, plot):
     st.pyplot(plot)
     cola, colb, colc = st.columns(3)
     with cola:
-        baseline0 = simulate_buy_hold(df['close'])
+        baseline0 = simulate_buy_hold(st.session_state['symbol'], st.session_state['days_away'])
         st.metric(label='Buy and Hold', value=f'{baseline0*100:.2f}%',
                   delta=f'{(stats["Return"] - baseline0)*100:.2f}%', help='Buy at the very start and sell at the very end')
     with colc:
         with st.expander('Assumptions:'):
             st.write('Taxes account for `0.1%`')
             st.write('Transaction fees account for `0.25%`')
+            st.write('Expected market return: `10%`')
+            st.write('Risk-free rate: `4.5%`')
             st.write('Money will return after `1` day when selling')
-
-
-def simulate(choice, symbol, days_away, period, order):
-    df = get_stock_data(symbol, days_away=days_away)
-    plot, stats = simulate_trading(choice, period, df['close'], 100_000_000, order, verbose=False, plot=True)
-    return plot, stats
 
 
 if (('symbol' and 'days_away') not in st.session_state) or not st.session_state['symbol']:
@@ -60,19 +56,18 @@ else:
             st.write('')
             Auto = st.button('Auto', help='Auto generate the best period for returns') if (choice == 'Momentum' or choice == 'Mean Reversion') else None
     if Simulate:
-        df = get_stock_data(st.session_state['symbol'], days_away=st.session_state['days_away'])
         if choice is None:
             with col1s:
                 st.error('Please pick a Strategy before running the simulation')
         else:
-            plot, stats = simulate(choice, st.session_state['symbol'], st.session_state['days_away'], period, order)
+            plot, stats = simulate_trading(choice, period, st.session_state['symbol'], st.session_state['days_away'], 100_000_000, order, st.session_state['position_sizing'], verbose=False, plot=True)
             st.session_state['period'] = period
             draw_data(col2, stats, choice, plot)
     if Auto:
         df = get_stock_data(st.session_state['symbol'], days_away=st.session_state['days_away'])
-        best_period = optimize_choice(choice, df['close'])
+        best_period = optimize_choice(choice, st.session_state['symbol'], st.session_state['days_away'], st.session_state['position_sizing'])
         st.session_state['period'] = best_period
-        plot, stats = simulate(choice, st.session_state['symbol'], st.session_state['days_away'], best_period, order)
+        plot, stats = simulate_trading(choice, period, st.session_state['symbol'], st.session_state['days_away'], 100_000_000, order, st.session_state['position_sizing'], verbose=False, plot=True)
         draw_data(col2, stats, choice, plot)
 
 try:
