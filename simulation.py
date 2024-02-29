@@ -50,7 +50,7 @@ def calculate_position_sizing(symbol, prices):
     p /= len(returns)
 
     beta = general_rating(symbol).T.loc['beta', 0]
-    expected_market_return = 0.1
+    expected_market_return = 0.15
     bank_rate = 0.045
     CAPM_return = (bank_rate + beta*(expected_market_return - bank_rate)) * 100
     return (CAPM_return*p + (1-p))/CAPM_return
