@@ -7,7 +7,7 @@ from plots import get_stock_data
 from simulation import simulate_trading, optimize_choice, simulate_buy_hold
 
 st.set_page_config(layout="wide",
-                   page_title='Stock Analysis')
+                   page_title='Stock Simulation')
 
 
 def draw_data(column, stats, choice, plot):
@@ -41,7 +41,7 @@ else:
     col1, col2 = st.columns(2)
     with col1:
         st.title('Strategy Simulation')
-        st.write(f"Simulating buy and selling `{st.session_state['symbol']}` within the last `{st.session_state['days_away']}` days")
+        st.write(f"Simulating buy and selling `{st.session_state['symbol'].upper()}` within the last `{st.session_state['days_away']}` days")
         col1s, col2s = st.columns(2)
         with col1s:
             choice = st.selectbox('Pick a Strategy', options=["Random", "Momentum", 'Mean Reversion', 'ARIMA'], label_visibility='collapsed', placeholder='Pick a Strategy', index=None)
@@ -69,7 +69,7 @@ else:
         df = get_stock_data(st.session_state['symbol'], days_away=st.session_state['days_away'])
         best_period = optimize_choice(choice, st.session_state['symbol'], st.session_state['days_away'], st.session_state['position_sizing'])
         st.session_state['period'] = best_period
-        plot, stats = simulate_trading(choice, period, st.session_state['symbol'], st.session_state['days_away'], 100_000_000, order, st.session_state['position_sizing'], verbose=False, plot=True)
+        plot, stats = simulate_trading(choice, best_period, st.session_state['symbol'], st.session_state['days_away'], 100_000_000, order, st.session_state['position_sizing'], verbose=False, plot=True)
         draw_data(col2, stats, choice, plot)
 
 try:

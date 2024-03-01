@@ -193,18 +193,18 @@ def simulate_trading(choice, period, symbol, days_away, amt, order, position_siz
         for event in events_list:
             date = event[1]
             buy_amount = event[3]
-            proportion = buy_amount / (max(buy_amounts)*3)
+            proportion = buy_amount / (max(buy_amounts)*1)
             date_proportion_dict[date] = proportion
 
         for idx, event in enumerate(events_list):
             if event[0] == 'b':
                 if idx == 0:
                     buy_index = idx
-                    ax.axvline(event[1], color='k', linestyle='--', alpha=0.45)
+                    ax.axvline(event[1], color='k', linestyle='--', alpha=0.4)
                     continue
                 if events_list[idx - 1][0] == 's':
                     buy_index = idx
-                    ax.axvline(event[1], color='k', linestyle='--', alpha=0.45)
+                    ax.axvline(event[1], color='k', linestyle='--', alpha=0.4)
                 else:
                     proportion = date_proportion_dict[event[1]]
                     ax.axvline(event[1], color='white', linestyle='-', alpha=0.15, ymin=0, ymax=proportion)
@@ -217,6 +217,7 @@ def simulate_trading(choice, period, symbol, days_away, amt, order, position_siz
                 ax.axvline(event[1], color='k', linestyle='--', alpha=0.4)
         ax.set_title("%s(%s)\nTotal Asset: %sM, Total Return: %s\nShares Left: %s" %(choice, period if period is not None else order, total_asset, total_return, total_shares_held), fontsize=20)
         ax.set_ylim(prices.min() * 0.95, prices.max() * 1.05)
+
         return fig, stats
 
     return stats

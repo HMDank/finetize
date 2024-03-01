@@ -89,7 +89,7 @@ def main():
                 st.subheader("Summary Statistics:")
                 st.dataframe(summary_df, hide_index=True, use_container_width=True)
                 metrics = calculate_financial_metrics(symbol)
-                st.subheader(f'Financial Statistics of {symbol.upper()}')
+                st.subheader(f'Financial Statistics')
                 st.dataframe(metrics, use_container_width=True, height=520)
 
             with col2a:

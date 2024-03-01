@@ -192,7 +192,7 @@ def generate_metrics(symbol):
         df = financial_ratio(symbol, 'yearly')
         return df.drop('ticker').to_dict()
     except Exception:
-        st.error("Can't generate financial metrics")
+        st.error("Can't generate financial statistics")
 
 
 def generate_ai_analysis(df, key):

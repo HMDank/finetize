@@ -4,6 +4,7 @@ from simulation import test_market, split_results
 st.set_page_config(layout="wide",
                    page_title='Against Market')
 
+
 @st.cache_data(show_spinner='Running against `HOSE` (~5 Minutes)')
 def display_results():
     results = test_market(st.session_state['choice'], st.session_state['period'], st.session_state['days_away'])
@@ -26,8 +27,8 @@ else:
         st.subheader('Here are the results:', anchor=False)
         display_results()
 
-    try:
-        with st.sidebar:
-            st.write(st.page_link("https://www.linkedin.com/in/hmdank/", label="@dank"))
-    except Exception:
-        pass
+try:
+    with st.sidebar:
+        st.write(st.page_link("https://www.linkedin.com/in/hmdank/", label="@dank"))
+except Exception:
+    pass
