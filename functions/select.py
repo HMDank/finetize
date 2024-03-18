@@ -95,7 +95,7 @@ def compare_stocks(symbol_list):
         'exchangeName': 'HOSE,HNX',
     }
     df = stock_screening_insights(params, size=1700, drop_lang='vi')
-    df = df[df['ticker'].isin(symbol_list)].loc[:, ['ticker', 'marketCap', 'pe', 'pb', 'roe', 'industryName.en']]
+    df = df[df['ticker'].isin(symbol_list)].loc[:, ['ticker', 'marketCap', 'pe', 'pb', 'roe', 'industryName.en', 'revenueGrowth1Year', ]]
     df = reorder_stocks(df)
     market_df = calculate_market()
     new_rows = []
@@ -107,12 +107,11 @@ def compare_stocks(symbol_list):
             industry_stats = market_df.loc[current_industry]
             print(industry_stats)
             new_row = {
-                'ticker': 'Industry',
+                'ticker': current_industry,
                 'marketCap': industry_stats['Industry_Market_Cap'],
                 'pe': industry_stats['Industry_PE_ratio'],
                 'pb': industry_stats['Industry_PB_ratio'],
                 'roe': industry_stats['Industry_ROE_ratio'],
-                'industryName.en': current_industry
             }
             new_rows.append(new_row)
 
@@ -120,5 +119,20 @@ def compare_stocks(symbol_list):
         new_rows.append(row.to_dict())
 
 # Create a new DataFrame with the updated rows
-    new_df = pd.DataFrame(new_rows, columns=df.columns)
-    return new_df
+    new_df = pd.DataFrame(new_rows, columns=df.columns).drop(columns=['industryName.en'])
+
+    def highlight_industry_row(row):
+        if len(row['ticker']) > 3:
+            return ['background-color: #262730'] * len(row)
+        else:
+            return [''] * len(row)
+
+    # Apply the function to the DataFrame
+    styled_df = new_df.style.apply(highlight_industry_row, axis=1)
+    final_df = styled_df.format({
+        'marketCap': '{:.2f}',  # Limit to 2 digits after the decimal point
+        'pe': '{:.2f}',         # Limit to 2 digits after the decimal point
+        'pb': '{:.2f}',         # Limit to 2 digits after the decimal point
+        'roe': '{:.2f}'         # Limit to 2 digits after the decimal point
+    })
+    return final_df
