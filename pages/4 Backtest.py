@@ -1,5 +1,5 @@
 import streamlit as st
-from simulation import test_market, split_results
+from functions.simulation import test_market, split_results
 
 st.set_page_config(layout="wide",
                    page_title='Against Market')
@@ -19,7 +19,7 @@ def display_results():
 
 
 if (('symbol' and 'days_away' and 'choice' and 'period') not in st.session_state):
-    st.write('Please head on over to Simulation and simulate a strategy')
+    st.write('Please head on over to `Simulate` and simulate a strategy')
 else:
     st.title('Test Against Market')
     st.write('Using', st.session_state['choice'], 'at', st.session_state['period'])
