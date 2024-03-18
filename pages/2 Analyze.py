@@ -59,7 +59,7 @@ def main():
             if 'symbol' not in st.session_state:
                 st.session_state['symbol'] = ''
 
-            symbol = st.text_input('Enter Stock Symbol:', st.session_state['symbol'])
+            symbol = st.text_input('Enter Stock Symbol:')
             if 'days_away' not in st.session_state:
                 st.session_state['days_away'] = 365
             days_away = st.number_input('Enter Days Away:', min_value=1, value=st.session_state['days_away'])

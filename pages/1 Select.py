@@ -35,7 +35,7 @@ with tab2:
         st.session_state.symbol_list = []
 
     st.title('Stock Comparison')
-    st.caption('Based on `HOSE & HNX`, of symbols with a market cap of more than `1000`')
+    st.caption('Compare stock symbols against each others and the entire industry')
     col1a, col1b, col1c = st.columns(3)
 
     with col1a:
