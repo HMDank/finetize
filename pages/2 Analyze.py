@@ -1,6 +1,7 @@
 import streamlit as st
 from functions.plots import generate_data_plot, generate_acf_plots, generate_histogram_plot, get_stock_data, generate_metrics, generate_scatter_plot, show_full_name
 from functions.simulation import calculate_position_sizing
+from functions.select import compare_stocks
 import pandas as pd
 import traceback
 st.set_page_config(layout="wide",
@@ -44,14 +45,16 @@ def calculate_financial_metrics(symbol):
     metrics = generate_metrics(symbol)
     return metrics
 
-@st.cache_data(show_spinner="Loading AI's Response (Might take up to 5 Minutes)")
+@st.cache_data()
 def show_name(symbol):
     name = show_full_name(symbol)
+    market_cap = compare_stocks(symbol)
     return name
 
 
 def main():
     st.title('Stock Analysis', anchor=False)
+    st.caption('Enter a stock `symbol` and `days away` (from today) to see stock analysis!')
     col, col0 = st.columns(2)
     with col:
         subcol1, subcol2, subcol3 = st.columns(3)
@@ -62,7 +65,7 @@ def main():
             symbol = st.text_input('Enter Stock Symbol:')
             if 'days_away' not in st.session_state:
                 st.session_state['days_away'] = 365
-            days_away = st.number_input('Enter Days Away:', min_value=1, value=st.session_state['days_away'])
+            days_away = st.number_input('Enter Days Away:', min_value=4, value=st.session_state['days_away'])
 
     if symbol:
         st.session_state['symbol'] = symbol
@@ -113,7 +116,6 @@ def main():
                 # with st.container(height=112, border=True):
                 #     st.markdown('<link href="https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,100;0,300;0,400;0,700;0,900;1,100;1,300;1,400;1,700;1,900&family=Nunito+Sans:ital,opsz,wght@0,6..12,200..1000;1,6..12,200..1000&family=Roboto+Mono:ital,wght@0,100..700;1,100..700&family=Source+Sans+3:ital,wght@0,200..900;1,200..900&display=swap" rel="stylesheet">', unsafe_allow_html=True)
                 #     st.markdown(f'<span style="color:#75AB9D; font-size: 14px; font-family: \'Roboto Mono\', monospace;">{show_ai_response(df)}</span>', unsafe_allow_html=True)
-
 
     try:
         with st.sidebar:

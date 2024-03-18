@@ -1,8 +1,19 @@
 import streamlit as st
+from vnstock import stock_screening_insights
 from functions.plots import get_stock_data
 from functions.select import fundamental_selections, technical_selections, filter_stock, compare_stocks
 st.set_page_config(layout="wide",
                    page_title='Stock Filter')
+
+
+def calc_total_market_cap():
+    params = {
+        'exchangeName': 'HOSE,HNX',
+    }
+    df = stock_screening_insights(params, size=1700, drop_lang='vi')
+    total_cap = df.loc[:, ['marketCap']].sum()
+    return int(total_cap[0])
+
 
 def add_symbol(symbol):
     try:
@@ -10,6 +21,7 @@ def add_symbol(symbol):
         st.session_state.symbol_list.append(symbol)
     except Exception:
         st.error('Invalid Symbol')
+
 
 tab1, tab2 = st.tabs(['Filter', 'Compare'])
 with tab1:
@@ -42,22 +54,25 @@ with tab2:
         col1aa, col1ab = st.columns(2)
         with col1aa:
             symbol = st.text_input('Enter Stock Symbol:')
-        with col1ab:
-            st.write('')
-            add = st.button('Add')
-    if add:
-        if symbol not in st.session_state.symbol_list:
-            add_symbol(symbol.upper())
-        else:
-            st.error('Symbol already in List')
+    if symbol and symbol not in st.session_state.symbol_list and len(symbol) == 3:
+        add_symbol(symbol.upper())
     with col1c:
-        st.subheader('Selected Symbols:')
+        st.subheader('Symbols queue:')
         if st.session_state.symbol_list:
             result_string = ', '.join(st.session_state.symbol_list)
-            st.write(result_string)
+            st.caption(result_string)
     if st.button('Compare'):
         st.dataframe(
             compare_stocks(st.session_state.symbol_list),
+            column_config={
+                "marketCap": st.column_config.ProgressColumn(
+                    "Market Cap",
+                    help="The Market Cap of the symbol/industry",
+                    format="%f",
+                    min_value=0,
+                    max_value=calc_total_market_cap(),
+                ),
+            },
             hide_index=True,
             use_container_width=True,
             )

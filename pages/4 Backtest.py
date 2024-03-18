@@ -18,7 +18,7 @@ def display_results():
         st.dataframe(losses, use_container_width=True)
 
 
-if (('symbol' and 'days_away' and 'choice' and 'period') not in st.session_state):
+if (('symbol' and 'days_away' and 'choice' and 'period') not in st.session_state) or (st.session_state['choice'] is None):
     st.write('Please head on over to `Simulate` and simulate a strategy')
 else:
     st.title('Test Against Market')

@@ -70,6 +70,7 @@ else:
     col1, col2 = st.columns(2)
     with col1:
         st.title('Strategy Simulation')
+        st.caption('Pick a trading strategy and simulate trading on the data in `Analyze`')
         st.write(f"Simulating buy and selling `{st.session_state['symbol'].upper()}` within the last `{st.session_state['days_away']}` days")
         col1s, col2s = st.columns(2)
         with col1s:
