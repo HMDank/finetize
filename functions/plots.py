@@ -184,8 +184,8 @@ def generate_scatter_plot(df, days_away):
 
 def generate_metrics(symbol):
     try:
-        df = financial_ratio(symbol, 'yearly')
-        return df.drop('ticker').to_dict()
+        df = financial_ratio(symbol, 'yearly').drop('ticker')
+        return df
     except Exception:
         st.error("Can't generate financial statistics")
 
@@ -200,3 +200,12 @@ def generate_ai_analysis(df, key):
 def show_full_name(symbol):
     profile = company_profile(symbol).T.iloc[1][0]
     return profile
+
+
+def get_basic_data(symbol):
+    params = {
+        'exchangeName': 'HOSE,HNX',
+    }
+    df = stock_screening_insights(params, size=1700, drop_lang='vi')
+    df = df[df['ticker'] == symbol].loc[:, ['marketCap', 'exchangeName.en', 'industryName.en']]
+    return df

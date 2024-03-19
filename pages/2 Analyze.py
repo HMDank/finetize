@@ -1,5 +1,5 @@
 import streamlit as st
-from functions.plots import generate_data_plot, generate_acf_plots, generate_histogram_plot, get_stock_data, generate_metrics, generate_scatter_plot, show_full_name
+from functions.plots import generate_data_plot, generate_acf_plots, generate_histogram_plot, get_stock_data, generate_metrics, generate_scatter_plot, show_full_name, get_basic_data
 from functions.simulation import calculate_position_sizing
 from functions.select import compare_stocks
 import pandas as pd
@@ -45,11 +45,11 @@ def calculate_financial_metrics(symbol):
     metrics = generate_metrics(symbol)
     return metrics
 
-@st.cache_data()
-def show_name(symbol):
+@st.cache_data(show_spinner='Loading Basic Data')
+def show_basic_data(symbol):
     name = show_full_name(symbol)
-    market_cap = compare_stocks(symbol)
-    return name
+    basic_df = get_basic_data(symbol)
+    return name, basic_df
 
 
 def main():
@@ -62,7 +62,7 @@ def main():
             if 'symbol' not in st.session_state:
                 st.session_state['symbol'] = ''
 
-            symbol = st.text_input('Enter Stock Symbol:')
+            symbol = st.text_input('Enter Stock Symbol:', value=st.session_state['symbol'])
             if 'days_away' not in st.session_state:
                 st.session_state['days_away'] = 365
             days_away = st.number_input('Enter Days Away:', min_value=4, value=st.session_state['days_away'])
@@ -104,14 +104,15 @@ def main():
             tb_str = traceback.format_exception(type(e), e, e.__traceback__)
             st.error(f"{tb_str}")
 
-        position_sizing = calculate_position_sizing(st.session_state['symbol'], df['close'])
+        position_sizing = 1  # calculate_position_sizing(st.session_state['symbol'], df['close'])
         if 'position_sizing' not in st.session_state:
                 st.session_state['position_sizing'] = 1
         st.session_state['position_sizing'] = position_sizing
-
         if len(symbol) == 3:
             with col0:
-                st.title(show_name(st.session_state['symbol']), anchor=False)
+                name, basic_df = show_basic_data(st.session_state['symbol'])
+                st.title(name, anchor=False)
+                st.text(f'{basic_df["industryName.en"].iloc[0]} | Market Cap: {int(basic_df["marketCap"].iloc[0])} | {basic_df["exchangeName.en"].iloc[0]}')
                 # st.markdown('<span style="color:#75AB9D; font-size: 18px; font-weight: bold; font-family: \'Roboto Mono\', monospace;">AI Analysis</span>', unsafe_allow_html=True)
                 # with st.container(height=112, border=True):
                 #     st.markdown('<link href="https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,100;0,300;0,400;0,700;0,900;1,100;1,300;1,400;1,700;1,900&family=Nunito+Sans:ital,opsz,wght@0,6..12,200..1000;1,6..12,200..1000&family=Roboto+Mono:ital,wght@0,100..700;1,100..700&family=Source+Sans+3:ital,wght@0,200..900;1,200..900&display=swap" rel="stylesheet">', unsafe_allow_html=True)

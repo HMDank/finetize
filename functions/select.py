@@ -44,7 +44,14 @@ def filter_stock(params_list):
         industry_symbols = sorted_df[sorted_df['industryName.en'] == industry]
         result_df = pd.concat([result_df, industry_symbols], ignore_index=True)
 
-    return result_df.drop(columns=['companyName'])
+    def highlight_industry_row(row):
+        return ['background-color: #1a1c24' if row.name % 2 == 0 else '' for _ in row]
+    new_df = result_df.drop(columns=['companyName'])
+    formatted_df = new_df.style.apply(highlight_industry_row, axis=1)
+    numeric_columns = new_df.select_dtypes(include=['float64', 'int64']).columns
+    formatted_df = formatted_df.format({col: '{:.1f}' for col in numeric_columns})
+
+    return formatted_df
 
 
 def reorder_stocks(df):
@@ -71,7 +78,7 @@ def calculate_market():
     result_df = pd.DataFrame(columns=df.columns)
     for industry in top_stock_market_cap['industryName.en']:
         industry_symbols = sorted_df[sorted_df['industryName.en'] == industry]
-        result_df = pd.concat([result_df, industry_symbols], ignore_index=True)
+        result_df = pd.concat([result_df, industry_symbols.dropna(axis=1, how='all')], ignore_index=True)
     total_market_cap_by_industry = result_df.groupby('industryName.en')['marketCap'].sum()
     result_df['industryMarketCapWeight'] = result_df.groupby('industryName.en')['marketCap'].transform(lambda x: x / x.sum())
     result_df['weightedPE'] = result_df['pe'] * result_df['industryMarketCapWeight']
@@ -105,7 +112,6 @@ def compare_stocks(symbol_list):
             # If industry changes, get the corresponding PE and PB values from market_df
             current_industry = row['industryName.en']
             industry_stats = market_df.loc[current_industry]
-            print(industry_stats)
             new_row = {
                 'ticker': current_industry,
                 'marketCap': industry_stats['Industry_Market_Cap'],
@@ -130,9 +136,10 @@ def compare_stocks(symbol_list):
     # Apply the function to the DataFrame
     styled_df = new_df.style.apply(highlight_industry_row, axis=1)
     final_df = styled_df.format({
-        'marketCap': '{:.2f}',  # Limit to 2 digits after the decimal point
-        'pe': '{:.2f}',         # Limit to 2 digits after the decimal point
-        'pb': '{:.2f}',         # Limit to 2 digits after the decimal point
-        'roe': '{:.2f}'         # Limit to 2 digits after the decimal point
+        'marketCap': '{:.2f}',
+        'pe': '{:.2f}',
+        'pb': '{:.2f}',
+        'roe': '{:.2f}',
+        'revenueGrowth1Year': '{:.2f}'
     })
     return final_df

@@ -57,9 +57,10 @@ def draw_data(column, stats, choice, plot) -> None:
         with st.expander('Assumptions:'):
             st.write('Taxes account for `0.1%`')
             st.write('Transaction fees account for `0.25%`')
-            st.write('Money will return after `1` day when selling')
-            st.write('Expected market return: `15%`')
-            st.write('Risk-free rate: `4.5%`')
+            st.write('Share will return after `2` days when buying')
+            st.write('Money will return after `2` days when selling')
+            # st.write('Expected market return: `15%`')
+            # st.write('Risk-free rate: `4.5%`')
             st.write(f'Position sizing: `{st.session_state["position_sizing"]*100:.2f}%`')
 
 

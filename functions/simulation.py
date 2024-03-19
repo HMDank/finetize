@@ -107,16 +107,17 @@ def simulate_trading(choice, period, symbol, days_away, amt, order, position_siz
         if choice == 'Mean Reversion':
             if len(rate) < period + 1:
                 return 'wait'
-            if sum(rate[-(period+1):-1]) / period > rate[-1]:
+            avg_rate = np.mean(rate[-(period+1):-1])
+            if avg_rate > rate[-1]:
                 return 'buy'
             return 'sell'
         if choice == 'ARIMA':
             if len(rate) > 30:
                 model = ARIMA(rate, order=order).fit()
                 prediction = model.forecast(steps=1)
-                if prediction > 0.001:
+                if prediction > 0.002:
                     return 'buy'
-                if prediction < -0.001:
+                if prediction < -0.002:
                     return 'sell'
             return 'wait'
     prices = get_stock_data(symbol, days_away)['close']
@@ -129,16 +130,20 @@ def simulate_trading(choice, period, symbol, days_away, amt, order, position_siz
     total_shares_held = 0
     buying_price = []
     rate = []
-    last_selling_event = 0
+    last_buy = 0
+    last_sell = 0
     for date, r in tqdm(returns.items(), total=len(returns)):
-        if last_selling_event > 0:
-            last_selling_event -= 1
-            continue
+        action = decide(rate, choice, period, order)
+        if last_buy > 0:
+            last_buy -= 1
+            action = 'wait'
+        if last_sell > 0:
+            last_sell -= 1
+            action = 'wait'
         current_price = prices.loc[date]
         if isinstance(current_price, pd.Series):
             current_price = prices.loc[date].iloc[0]
         rate.append(r)
-        action = decide(rate, choice, period, order)
         if action == 'wait':
             if verbose:
                 print(f'Waited with {total_shares_held} shares')
@@ -148,11 +153,11 @@ def simulate_trading(choice, period, symbol, days_away, amt, order, position_siz
             buying_price.clear()
             sell_amount = total_shares_held  # $random.randint(1, total_shares_held) if total_shares_held > 1 else 1
             sell_price = current_price
-            amt += sell_price*sell_amount*0.9975*0.999
+            amt += sell_price*sell_amount*0.9965
             ret = (sell_price - buy_price) / buy_price
             events_list.append(('s', date, sell_price, ret, sell_amount, amt))
             total_shares_held -= sell_amount
-            last_selling_event = 1
+            last_sell = 2
 
             if verbose:
                 print(f'Sold {sell_amount} stocks at %s. Current asset: {amt}' % sell_price)
@@ -166,6 +171,7 @@ def simulate_trading(choice, period, symbol, days_away, amt, order, position_siz
             buying_price.append(buy_price)
             events_list.append(('b', date, buy_price, buy_amount))
             total_shares_held += buy_amount
+            last_buy = 2
             if verbose:
                 print(f'Bought {buy_amount} stocks at {buy_price}, {amt} remaining')
 
