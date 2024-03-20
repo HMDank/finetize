@@ -241,12 +241,13 @@ def optimize_choice(choice, symbol, days_away, position_sizing):
 def test_market(choice, period, days_away):
     results = {}
     params = {
-                "exchangeName": "HOSE",
+                "exchangeName": "HOSE,HNX",
+                'marketCap': (1000, 99999999999),
                 }
     tickers = stock_screening_insights(params, size=1700)['ticker']
     for ticker in tickers:
         try:
-            stats = simulate_trading(choice, period, ticker, days_away, 100_000_000, 0, verbose=False, plot=False)
+            stats = simulate_trading(choice, period, ticker, days_away, 100_000_000, 0, 1, verbose=False, plot=False)
             results[ticker] = stats['Return']
         except Exception:
             results[ticker] = None

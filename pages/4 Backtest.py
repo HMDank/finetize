@@ -7,6 +7,7 @@ st.set_page_config(layout="wide",
 
 @st.cache_data(show_spinner='Running against `HOSE` (~5 Minutes)')
 def display_results():
+    print('1')
     results = test_market(st.session_state['choice'], st.session_state['period'], st.session_state['days_away'])
     wins, losses = split_results(results)
     col1, col2 = st.columns(2)
@@ -18,10 +19,10 @@ def display_results():
         st.dataframe(losses, use_container_width=True)
 
 
-if (('symbol' and 'days_away' and 'choice' and 'period') not in st.session_state) or (st.session_state['choice'] is None):
+if (('symbol' and 'days_away' and 'choice' and 'period') not in st.session_state):
     st.write('Please head on over to `Simulate` and simulate a strategy')
 else:
-    st.title('Test Against Market',anchor=False)
+    st.title('Test Against Market', anchor=False)
     st.write('Using', st.session_state['choice'], 'at', st.session_state['period'])
     if st.button('Run'):
         st.subheader('Here are the results:', anchor=False)
