@@ -1,3 +1,4 @@
+from datetime import datetime
 import streamlit as st
 import numpy as np
 import os
@@ -16,7 +17,7 @@ technical_selections = {
 }
 
 
-def filter_stock(params_list):
+def filter_stock(params_list, industry):
     default_params = {
         'exchangeName': 'HOSE,HNX',
         'marketCap': (1000, 99999999999),
@@ -29,9 +30,13 @@ def filter_stock(params_list):
         for item in technical_selections.items():
             if selection == item[0]:
                 extra_params.update(technical_selections.get(selection))
+
+    industry_params = {'industryName': industry} if industry else None
     final_params = {}
     final_params.update(default_params)
     final_params.update(extra_params)
+    if industry_params is not None:
+        final_params.update(industry_params)
     df = stock_screening_insights(final_params, size=1700, drop_lang='vi')
     if df.empty:
         return df
@@ -102,11 +107,23 @@ def compare_stocks(symbol_list):
         'exchangeName': 'HOSE,HNX',
     }
     df = stock_screening_insights(params, size=1700, drop_lang='vi')
-    df = df[df['ticker'].isin(symbol_list)].loc[:, ['ticker', 'marketCap', 'pe', 'pb', 'roe', 'industryName.en', 'revenueGrowth1Year', ]]
+    df = df[df['ticker'].isin(symbol_list)].loc[:, ['ticker', 'marketCap', 'pe', 'pb', 'roe', 'industryName.en', 'revenueGrowth1Year',]]
     df = reorder_stocks(df)
     market_df = calculate_market()
     new_rows = []
     current_industry = None
+    price_changes = []
+    for symbol in df['ticker']:
+        df2 = stock_historical_data(symbol, start_date=datetime.today().strftime('%Y-%m-%d'), end_date=datetime.today().strftime('%Y-%m-%d'), resolution="1")['close'][1:]
+        first_value = df2.iloc[0]
+        min_value = df2.min()
+        max_value = df2.max()
+        scaled_df = (df2 - first_value) / (max_value - min_value)
+        changes = scaled_df.tolist()
+        price_changes.append(changes)
+
+    df['price_change'] = price_changes
+
     for index, row in df.iterrows():
         if row['industryName.en'] != current_industry:
             # If industry changes, get the corresponding PE and PB values from market_df
@@ -118,6 +135,7 @@ def compare_stocks(symbol_list):
                 'pe': industry_stats['Industry_PE_ratio'],
                 'pb': industry_stats['Industry_PB_ratio'],
                 'roe': industry_stats['Industry_ROE_ratio'],
+                'revenueGrowth1year': '',
             }
             new_rows.append(new_row)
 

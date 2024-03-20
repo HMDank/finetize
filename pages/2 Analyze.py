@@ -68,7 +68,7 @@ def main():
             days_away = st.number_input('Enter Days Away:', min_value=4, value=st.session_state['days_away'])
 
     if symbol:
-        st.session_state['symbol'] = symbol
+        st.session_state['symbol'] = symbol.upper()
         st.session_state['days_away'] = days_away
         df, returns = retrieve_data(symbol, days_away)
         col1, col2 = st.columns(2)
