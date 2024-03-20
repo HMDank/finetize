@@ -70,7 +70,7 @@ if (('symbol' and 'days_away') not in st.session_state) or not st.session_state[
 else:
     col1, col2 = st.columns(2)
     with col1:
-        st.title('Strategy Simulation')
+        st.title('Strategy Simulation', anchor=False)
         st.caption('Pick a trading strategy and simulate trading on the data in `Analyze`')
         st.write(f"Simulating buy and selling `{st.session_state['symbol'].upper()}` within the last `{st.session_state['days_away']}` days")
         col1s, col2s = st.columns(2)
@@ -101,8 +101,8 @@ else:
         plot, stats = simulate_trading(choice, best_period, st.session_state['symbol'], st.session_state['days_away'], 100_000_000, order, st.session_state['position_sizing'], verbose=False, plot=True)
         draw_data(col2, stats, choice, plot)
 
-try:
-    with st.sidebar:
-        st.write(st.page_link("https://www.linkedin.com/in/hmdank/", label="@dank"))
-except Exception:
-    pass
+# try:
+#     with st.sidebar:
+#         st.write(st.page_link("https://www.linkedin.com/in/hmdank/", label="@dank"))
+# except Exception:
+#     pass

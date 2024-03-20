@@ -21,14 +21,14 @@ def display_results():
 if (('symbol' and 'days_away' and 'choice' and 'period') not in st.session_state) or (st.session_state['choice'] is None):
     st.write('Please head on over to `Simulate` and simulate a strategy')
 else:
-    st.title('Test Against Market')
+    st.title('Test Against Market',anchor=False)
     st.write('Using', st.session_state['choice'], 'at', st.session_state['period'])
     if st.button('Run'):
         st.subheader('Here are the results:', anchor=False)
         display_results()
 
-try:
-    with st.sidebar:
-        st.write(st.page_link("https://www.linkedin.com/in/hmdank/", label="@dank"))
-except Exception:
-    pass
+# try:
+#     with st.sidebar:
+#         st.write(st.page_link("https://www.linkedin.com/in/hmdank/", label="@dank"))
+# except Exception:
+#     pass

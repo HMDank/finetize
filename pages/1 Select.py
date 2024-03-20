@@ -80,7 +80,7 @@ def calc_total_market_cap():
 symbols, industries = get_market_info()
 tab1, tab2 = st.tabs(['Filter', 'Compare'])
 with tab1:
-    st.title('Stock Filter')
+    st.title('Stock Filter', anchor=False)
     st.caption('Based on `HOSE & HNX`, of symbols with a market cap of more than `1000`')
     col1a, col1b, col1c, col1d = st.columns(4)
     with col1a:
@@ -111,7 +111,7 @@ with tab2:
     if "symbol_list" not in st.session_state:
         st.session_state.symbol_list = []
 
-    st.title('Stock Comparison')
+    st.title('Stock Comparison', anchor=False)
     st.caption('Compare stock symbols against each others and the entire industry')
 
     col1aa, col1ab, col1ac = st.columns(3)
