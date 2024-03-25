@@ -1,6 +1,5 @@
 import streamlit as st
 import numpy as np
-import os
 import scipy.stats as stats
 from vnstock import stock_historical_data, stock_screening_insights, fr_trade_heatmap, financial_ratio, company_profile
 import pandas as pd
@@ -8,9 +7,9 @@ from statsmodels.graphics.tsaplots import acf, pacf
 from datetime import timedelta, datetime
 import plotly.express as px
 import plotly.graph_objects as go
-from langchain_experimental.agents import create_pandas_dataframe_agent
-from dotenv import load_dotenv, find_dotenv
-from langchain_community.llms.openai import OpenAI
+# from langchain_experimental.agents import create_pandas_dataframe_agent
+# from dotenv import load_dotenv, find_dotenv
+# from langchain_community.llms.openai import OpenAI
 
 market_df = fr_trade_heatmap(symbol='VNINDEX', report_type='FrBuyVal').T
 
@@ -24,11 +23,8 @@ def get_stock_data(symbol: str, days_away: int):
     end_date_str = end_date.strftime('%Y-%m-%d')
 
     df = stock_historical_data(symbol, start_date_str, end_date_str,
-                                "1D", type='stock', source='TCBS') if len(symbol) == 3 else stock_historical_data(symbol, start_date_str, end_date_str,
-                                "1D", type='index', source='TCBS')
-
-
-    # Check if df is None or empty
+                               "1D", type='stock', source='TCBS') if len(symbol) == 3 else stock_historical_data(symbol, start_date_str, end_date_str,
+                               "1D", type='index', source='TCBS')
     if df is None or df.empty:
         print("Error fetching stock historical data.")
         return ''

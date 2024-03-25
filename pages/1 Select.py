@@ -5,22 +5,30 @@ from functions.select import fundamental_selections, technical_selections, filte
 st.set_page_config(layout="wide",
                    page_title='Stock Filter')
 
+
 @st.cache_data()
-def get_market_info():
+def get_df():
     default_params = {
         'exchangeName': 'HOSE,HNX',
     }
     df = stock_screening_insights(default_params, size=1700, drop_lang='vi')
+    return df
+
+
+@st.cache_data()
+def get_market_info(df):
+    total_cap = df.loc[:, ['marketCap']].sum()
+    total_market_cap = int(total_cap.iloc[0])
     tickers = df['ticker'].tolist()
     industries = df['industryName.en'].unique().tolist()
     industries.sort()
-    return tickers, industries
+    return tickers, industries, total_market_cap
 
 
 @st.cache_data(show_spinner='Loading Comparison Table')
-def generate_dataframe(symbol_list):
+def generate_dataframe(df, symbol_list, total_market_cap):
     st.dataframe(
-        compare_stocks(symbol_list),
+        compare_stocks(df, symbol_list),
         column_config={
             "ticker": st.column_config.TextColumn(
                 "Symbol",
@@ -28,7 +36,7 @@ def generate_dataframe(symbol_list):
             "price_change": st.column_config.LineChartColumn(
                 "Price Change",
                 width="small",
-                help="Change in price every minute in the last trading session",
+                help="Change in price every minute in the last 6 Months",
                 y_min=-1,
                 y_max=1
             ),
@@ -38,7 +46,7 @@ def generate_dataframe(symbol_list):
                 help="The Market Cap of the symbol/industry",
                 format="%f",
                 min_value=0,
-                max_value=calc_total_market_cap(),
+                max_value=total_market_cap,
             ),
             "pe": st.column_config.NumberColumn(
                 "P/E",
@@ -68,16 +76,8 @@ def generate_dataframe(symbol_list):
         )
 
 
-def calc_total_market_cap():
-    params = {
-        'exchangeName': 'HOSE,HNX',
-    }
-    df = stock_screening_insights(params, size=1700, drop_lang='vi')
-    total_cap = df.loc[:, ['marketCap']].sum()
-    return int(total_cap.iloc[0])
-
-
-symbols, industries = get_market_info()
+df = get_df()
+symbols, industries, total_market_cap = get_market_info(df)
 tab1, tab2 = st.tabs(['Filter', 'Compare'])
 with tab1:
     st.title('Stock Filter', anchor=False)
@@ -96,10 +96,10 @@ with tab1:
                                    label_visibility='collapsed')
     with col1c:
         industry = st.selectbox('Industry:',
-                                   list(industries),
-                                   placeholder='Industry',
-                                   label_visibility='collapsed',
-                                   index=None)
+                                list(industries),
+                                placeholder='Industry',
+                                label_visibility='collapsed',
+                                index=None)
     with col1d:
         filter = st.button('Filter')
 
@@ -121,7 +121,11 @@ with tab2:
                                    st.session_state.symbol_list,
                                    placeholder='Select symbols',
                                    label_visibility='collapsed')
+    with st.popover("Open popover"):
+        st.markdown("Hello World 👋")
+        name = st.text_input("What's your name?")
+
 
     if st.button('Compare'):
         st.session_state.symbol_list = selection
-        generate_dataframe(st.session_state.symbol_list)
+        generate_dataframe(df, st.session_state.symbol_list, total_market_cap)

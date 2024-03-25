@@ -47,8 +47,8 @@ def calculate_financial_metrics(symbol):
 
 @st.cache_data(show_spinner='Loading Basic Data')
 def show_basic_data(symbol):
-    name = show_full_name(symbol)
-    basic_df = get_basic_data(symbol)
+    name = show_full_name(symbol.upper())
+    basic_df = get_basic_data(symbol.upper())
     return name, basic_df
 
 
@@ -90,7 +90,7 @@ def main():
                     st.plotly_chart(plot_pacf, use_container_width=True)
                 st.subheader("Summary Statistics:")
                 st.dataframe(summary_df, hide_index=True, use_container_width=True)
-                metrics = calculate_financial_metrics(symbol)
+                metrics = calculate_financial_metrics(symbol.upper())
                 st.subheader(f'Financial Statistics')
                 st.dataframe(metrics, use_container_width=True, height=520)
 

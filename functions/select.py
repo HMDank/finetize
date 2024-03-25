@@ -1,14 +1,10 @@
-from datetime import datetime
-import streamlit as st
-import numpy as np
-import os
-import scipy.stats as stats
+from functions.plots import get_stock_data
 from vnstock import stock_historical_data, stock_screening_insights, fr_trade_heatmap, financial_ratio
 import pandas as pd
 
 fundamental_selections = {
     'PE < 20': {'pe': (0, 20)},
-    'PB > 1': {'pb': (1, 30)},
+    'PB < 1': {'pb': (0, 1)},
     'ROE > 25': {'roe':(25, 100)}
 }
 
@@ -71,11 +67,7 @@ def reorder_stocks(df):
     return result_df
 
 
-def calculate_market():
-    params = {
-        'exchangeName': 'HOSE,HNX',
-    }
-    df = stock_screening_insights(params, size=1700, drop_lang='vi')
+def calculate_market(df):
     sorted_df = df.sort_values(by=['industryName.en', 'marketCap'], ascending=[True, False])
     top_stock_market_cap = sorted_df.groupby('industryName.en')['marketCap'].first().reset_index()
     top_stock_market_cap = top_stock_market_cap.rename(columns={'marketCap': 'topStockMarketCap'})
@@ -102,19 +94,15 @@ def calculate_market():
     return industry_ratios_df
 
 
-def compare_stocks(symbol_list):
-    params = {
-        'exchangeName': 'HOSE,HNX',
-    }
-    df = stock_screening_insights(params, size=1700, drop_lang='vi')
+def compare_stocks(df, symbol_list):
     df = df[df['ticker'].isin(symbol_list)].loc[:, ['ticker', 'marketCap', 'pe', 'pb', 'roe', 'industryName.en', 'revenueGrowth1Year',]]
     df = reorder_stocks(df)
-    market_df = calculate_market()
+    market_df = calculate_market(df)
     new_rows = []
     current_industry = None
     price_changes = []
     for symbol in df['ticker']:
-        df2 = stock_historical_data(symbol, start_date=datetime.today().strftime('%Y-%m-%d'), end_date=datetime.today().strftime('%Y-%m-%d'), resolution="1")['close'][1:]
+        df2 = get_stock_data(symbol, 180)['close']
         first_value = df2.iloc[0]
         min_value = df2.min()
         max_value = df2.max()
