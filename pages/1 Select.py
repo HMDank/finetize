@@ -10,6 +10,7 @@ st.set_page_config(layout="wide",
 def get_df():
     default_params = {
         'exchangeName': 'HOSE,HNX',
+        'marketCap': (100, 99999999999),
     }
     df = stock_screening_insights(default_params, size=1700, drop_lang='vi')
     return df
@@ -82,30 +83,39 @@ tab1, tab2 = st.tabs(['Filter', 'Compare'])
 with tab1:
     st.title('Stock Filter', anchor=False)
     st.caption('Based on `HOSE & HNX`, of symbols with a market cap of more than `1000`')
-    col1a, col1b, col1c, col1d = st.columns(4)
-    with col1a:
-        fundamental = st.multiselect('Fundamental Metrics:',
-                                     list(fundamental_selections.keys()),
-                                     placeholder='Fundamental Metrics', label_visibility='collapsed',
-                                     )
+    col1, col2 = st.columns(2)
+    with col1:
+        with st.popover('Select Metrics', use_container_width=True):
+            st.subheader('Fundamentals:')
+            fundamental_values = ['pe', 'pb', 'roe']
+            params = {}
+            # Generate inputs in the same line
+            cols = st.columns(len(fundamental_values))
+            for col, col_container in zip(fundamental_values, cols):
+                params[col] = col_container.number_input(f"{col.upper()} >" if col=='roe' else f"{col.upper()} <", value=None, min_value=0)
 
-    with col1b:
-        technical = st.multiselect('Technical Metrics:',
-                                   list(technical_selections.keys()),
-                                   placeholder='Technical Metrics',
-                                   label_visibility='collapsed')
-    with col1c:
-        industry = st.selectbox('Industry:',
-                                list(industries),
-                                placeholder='Industry',
-                                label_visibility='collapsed',
-                                index=None)
-    with col1d:
-        filter = st.button('Filter')
+            st.subheader('Technical:')
+            col1a, col1b, col1c = st.columns(3)
+            with col1a:
+                params['rsi14'] = st.number_input("RSI14 <", value=None, min_value=0.01)
+            with col1b:
+                st.write('')
+                st.write('')
+                params['macd'] = st.checkbox('MACD < 0 and Increasing')
+
+    with col2:
+        col2a, col2b = st.columns(2)
+        with col2a:
+            industry = st.selectbox('Industry:',
+                                    list(industries),
+                                    placeholder='Industry',
+                                    label_visibility='collapsed',
+                                    index=None)
+        with col2b:
+            filter = st.button('Filter')
 
     if filter:
-        params = fundamental + technical
-        tickers = filter_stock(params, industry)
+        tickers = filter_stock(df, params, industry)
         st.dataframe(tickers, hide_index=True)
 with tab2:
     if "symbol_list" not in st.session_state:
@@ -121,10 +131,6 @@ with tab2:
                                    st.session_state.symbol_list,
                                    placeholder='Select symbols',
                                    label_visibility='collapsed')
-    with st.popover("Open popover"):
-        st.markdown("Hello World 👋")
-        name = st.text_input("What's your name?")
-
 
     if st.button('Compare'):
         st.session_state.symbol_list = selection

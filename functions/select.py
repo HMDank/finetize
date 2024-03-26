@@ -13,27 +13,18 @@ technical_selections = {
 }
 
 
-def filter_stock(params_list, industry):
-    default_params = {
-        'exchangeName': 'HOSE,HNX',
-        'marketCap': (1000, 99999999999),
-    }
-    extra_params = {}
-    for selection in params_list:
-        for item in fundamental_selections.items():
-            if selection == item[0]:
-                extra_params.update(fundamental_selections.get(selection))
-        for item in technical_selections.items():
-            if selection == item[0]:
-                extra_params.update(technical_selections.get(selection))
+def filter_stock(df, params, industry):
+    if industry:
+        df = df[df['industryName.en'] == industry]
+    for key, value in params.items():
+        if value is not None:
+            if key in ['pe', 'pb', 'rsi14']:
+                df = df[df[key] < value]
+            elif key == 'roe':
+                df = df[df['roe'] > value]
+            elif key == 'macd' and value:  # Assuming value is boolean
+                df = df[df['macdHistogram.en'] == 'MACD Histogram < 0 and increase']
 
-    industry_params = {'industryName': industry} if industry else None
-    final_params = {}
-    final_params.update(default_params)
-    final_params.update(extra_params)
-    if industry_params is not None:
-        final_params.update(industry_params)
-    df = stock_screening_insights(final_params, size=1700, drop_lang='vi')
     if df.empty:
         return df
     sorted_df = df.sort_values(by=['industryName.en', 'marketCap'], ascending=[True, False])
@@ -95,9 +86,9 @@ def calculate_market(df):
 
 
 def compare_stocks(df, symbol_list):
+    market_df = calculate_market(df)
     df = df[df['ticker'].isin(symbol_list)].loc[:, ['ticker', 'marketCap', 'pe', 'pb', 'roe', 'industryName.en', 'revenueGrowth1Year',]]
     df = reorder_stocks(df)
-    market_df = calculate_market(df)
     new_rows = []
     current_industry = None
     price_changes = []

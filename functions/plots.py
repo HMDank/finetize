@@ -1,7 +1,7 @@
 import streamlit as st
 import numpy as np
 import scipy.stats as stats
-from vnstock import stock_historical_data, stock_screening_insights, fr_trade_heatmap, financial_ratio, company_profile
+from vnstock import stock_historical_data, stock_screening_insights, financial_ratio
 import pandas as pd
 from statsmodels.graphics.tsaplots import acf, pacf
 from datetime import timedelta, datetime
@@ -11,7 +11,7 @@ import plotly.graph_objects as go
 # from dotenv import load_dotenv, find_dotenv
 # from langchain_community.llms.openai import OpenAI
 
-market_df = fr_trade_heatmap(symbol='VNINDEX', report_type='FrBuyVal').T
+# market_df = fr_trade_heatmap(symbol='VNINDEX', report_type='FrBuyVal').T
 
 
 def get_stock_data(symbol: str, days_away: int):
@@ -191,11 +191,6 @@ def generate_ai_analysis(df, key):
     pandas_agent = create_pandas_dataframe_agent(llm2, df, verbose=True)
     trends = pandas_agent.run(f"This is a data of the price of a stock symbol. Tell me the direction of the 'close' column over time and a pattern if it exists")
     return trends
-
-
-def show_full_name(symbol):
-    profile = company_profile(symbol).T.iloc[1][0]
-    return profile
 
 
 def get_basic_data(symbol):
