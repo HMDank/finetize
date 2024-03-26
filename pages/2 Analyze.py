@@ -138,7 +138,7 @@ with tab2:
         with subcol2:
             frequency = st.selectbox('Frequency', ['Yearly', 'Quarterly'], label_visibility='hidden')
         with subcol3:
-            periods = st.slider('Periods', min_value=1, max_value=15)
+            periods = st.slider('Periods', min_value=1, max_value=15, value=4)
     if symbol:
         st.session_state['symbol'] = symbol.upper()
         financial_df, balance_df = evaluate_stock(symbol, frequency)
