@@ -1,14 +1,10 @@
-from datetime import datetime
-import streamlit as st
-import numpy as np
-import os
-import scipy.stats as stats
+from functions.plots import get_stock_data
 from vnstock import stock_historical_data, stock_screening_insights, fr_trade_heatmap, financial_ratio
 import pandas as pd
 
 fundamental_selections = {
     'PE < 20': {'pe': (0, 20)},
-    'PB > 1': {'pb': (1, 30)},
+    'PB < 1': {'pb': (0, 1)},
     'ROE > 25': {'roe':(25, 100)}
 }
 
@@ -17,27 +13,18 @@ technical_selections = {
 }
 
 
-def filter_stock(params_list, industry):
-    default_params = {
-        'exchangeName': 'HOSE,HNX',
-        'marketCap': (1000, 99999999999),
-    }
-    extra_params = {}
-    for selection in params_list:
-        for item in fundamental_selections.items():
-            if selection == item[0]:
-                extra_params.update(fundamental_selections.get(selection))
-        for item in technical_selections.items():
-            if selection == item[0]:
-                extra_params.update(technical_selections.get(selection))
+def filter_stock(df, params, industry):
+    if industry:
+        df = df[df['industryName.en'] == industry]
+    for key, value in params.items():
+        if value is not None:
+            if key in ['pe', 'pb', 'rsi14']:
+                df = df[df[key] < value]
+            elif key == 'roe':
+                df = df[df['roe'] > value]
+            elif key == 'macd' and value:  # Assuming value is boolean
+                df = df[df['macdHistogram.en'] == 'MACD Histogram < 0 and increase']
 
-    industry_params = {'industryName': industry} if industry else None
-    final_params = {}
-    final_params.update(default_params)
-    final_params.update(extra_params)
-    if industry_params is not None:
-        final_params.update(industry_params)
-    df = stock_screening_insights(final_params, size=1700, drop_lang='vi')
     if df.empty:
         return df
     sorted_df = df.sort_values(by=['industryName.en', 'marketCap'], ascending=[True, False])
@@ -71,11 +58,7 @@ def reorder_stocks(df):
     return result_df
 
 
-def calculate_market():
-    params = {
-        'exchangeName': 'HOSE,HNX',
-    }
-    df = stock_screening_insights(params, size=1700, drop_lang='vi')
+def calculate_market(df):
     sorted_df = df.sort_values(by=['industryName.en', 'marketCap'], ascending=[True, False])
     top_stock_market_cap = sorted_df.groupby('industryName.en')['marketCap'].first().reset_index()
     top_stock_market_cap = top_stock_market_cap.rename(columns={'marketCap': 'topStockMarketCap'})
@@ -102,19 +85,15 @@ def calculate_market():
     return industry_ratios_df
 
 
-def compare_stocks(symbol_list):
-    params = {
-        'exchangeName': 'HOSE,HNX',
-    }
-    df = stock_screening_insights(params, size=1700, drop_lang='vi')
+def compare_stocks(df, symbol_list):
+    market_df = calculate_market(df)
     df = df[df['ticker'].isin(symbol_list)].loc[:, ['ticker', 'marketCap', 'pe', 'pb', 'roe', 'industryName.en', 'revenueGrowth1Year',]]
     df = reorder_stocks(df)
-    market_df = calculate_market()
     new_rows = []
     current_industry = None
     price_changes = []
     for symbol in df['ticker']:
-        df2 = stock_historical_data(symbol, start_date=datetime.today().strftime('%Y-%m-%d'), end_date=datetime.today().strftime('%Y-%m-%d'), resolution="1")['close'][1:]
+        df2 = get_stock_data(symbol, 180)['close']
         first_value = df2.iloc[0]
         min_value = df2.min()
         max_value = df2.max()
